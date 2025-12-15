@@ -6,7 +6,7 @@ export default function Home() {
       <h1 className="text-4xl md:text-6xl font-bold text-center mb-8 text-gray-900">
         NovaHunt.ai
       </h1>
-      <p className="text-lg md:text-2xl text-gray-600 text-center max-w-3xl mb-12">
+      <p className="text-xl md:text-2xl text-gray-600 text-center max-w-3xl mb-12">
         Find business emails instantly. Enter a company domain and get professional contacts.
       </p>
 
