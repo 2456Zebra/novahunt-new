@@ -1,25 +1,9 @@
 import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
-/**
- * Homepage search UI (updated spacing, sizes, and button styles)
- *
- * Key updates in this version:
- * - Restored large "NovaHunt.ai" heading (72px desktop, 48px mobile)
- * - Centered results and widened container for readability
- * - Initial preview shows 5 results; summary reads "Showing 5 of {Hunter total}"
- * - Both action controls ("Take us for a test drive" and "Choose Your Plan")
- *   are identical in size, color and glow (primary CTA style)
- * - Results have improved spacing, larger cards, and mobile-friendly layout
- * - "source" is a single-word clickable link
- * - Trust % badge visible next to email
- * - Reveal -> then "Save" (save persists in localStorage)
- *
- * Notes:
- * - Server API (/api/search) should return { query, total, emails: [...] } where total
- *   is the Hunter-reported number (used in the "Showing X of Y" text).
- */
+/* Homepage — consistent Inter font, identical CTA styles, mobile friendly */
 
+/* Helpers (mask, exec detection, dept detection, linkedin search) */
 function maskEmail(email) {
   if (!email) return '';
   const [local, domain] = email.split('@');
@@ -27,7 +11,6 @@ function maskEmail(email) {
   if (local.length <= 2) return local[0] + '***@' + domain;
   return local[0] + '***' + local.slice(-1) + '@' + domain;
 }
-
 function isExecutive(position = '') {
   if (!position) return false;
   const p = position.toLowerCase();
@@ -44,7 +27,6 @@ function isExecutive(position = '') {
     p.includes('principal')
   );
 }
-
 function detectDepartment(emailItem = {}) {
   if (emailItem.department && emailItem.department.trim()) return emailItem.department.trim();
   const pos = (emailItem.position || '').toLowerCase();
@@ -54,7 +36,6 @@ function detectDepartment(emailItem = {}) {
   }
   return 'Other';
 }
-
 function linkedinSearchUrl(person, domain) {
   let query = domain || '';
   if (person?.first_name || person?.last_name) {
@@ -68,11 +49,11 @@ function linkedinSearchUrl(person, domain) {
 export default function IndexPage() {
   const [domain, setDomain] = useState('');
   const [loading, setLoading] = useState(false);
-  const [payload, setPayload] = useState(null); // { query, total, emails }
+  const [payload, setPayload] = useState(null);
   const [error, setError] = useState(null);
-  const [revealed, setRevealed] = useState({}); // email => boolean
+  const [revealed, setRevealed] = useState({});
   const [savedSet, setSavedSet] = useState(new Set());
-  const [expandedDeps, setExpandedDeps] = useState({}); // dept => bool
+  const [expandedDeps, setExpandedDeps] = useState({});
 
   useEffect(() => {
     try {
@@ -81,17 +62,13 @@ export default function IndexPage() {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) setSavedSet(new Set(arr));
       }
-    } catch (err) {
-      // ignore
-    }
+    } catch (err) {}
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem('nova_saved_contacts', JSON.stringify(Array.from(savedSet)));
-    } catch (err) {
-      // ignore
-    }
+    } catch (err) {}
   }, [savedSet]);
 
   async function runTestDrive(e) {
@@ -107,9 +84,8 @@ export default function IndexPage() {
     try {
       const res = await fetch(`/api/search?domain=${encodeURIComponent(d)}`);
       const json = await res.json();
-      if (!res.ok) {
-        setError(json.error || 'Search failed');
-      } else {
+      if (!res.ok) setError(json.error || 'Search failed');
+      else {
         setPayload(json);
         setExpandedDeps({});
         setRevealed({});
@@ -122,7 +98,6 @@ export default function IndexPage() {
     }
   }
 
-  // grouping logic
   const groups = useMemo(() => {
     if (!payload?.emails) return { total: payload?.total || 0, executives: [], departments: {} };
     const emails = payload.emails.map((e, i) => ({ ...e, __idx: i }));
@@ -151,8 +126,7 @@ export default function IndexPage() {
     return { total: payload.total || emails.length, executives, departments: sortedDeptMap };
   }, [payload]);
 
-  // initial preview limit (5 for not-signed-in)
-  const initialLimit = 5;
+  const initialLimit = 5; // show 5 initially for not-signed-in
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
     let remaining = initialLimit;
@@ -177,9 +151,8 @@ export default function IndexPage() {
   }, [groups, payload]);
 
   function toggleReveal(email) {
-    setRevealed((prev) => ({ ...prev, [email]: true }));
+    setRevealed((p) => ({ ...p, [email]: true }));
   }
-
   function handleSave(email) {
     setSavedSet((s) => {
       const next = new Set(s);
@@ -187,7 +160,6 @@ export default function IndexPage() {
       return next;
     });
   }
-
   function toggleDept(dep) {
     setExpandedDeps((s) => ({ ...s, [dep]: !s[dep] }));
   }
@@ -198,8 +170,8 @@ export default function IndexPage() {
     const isSaved = savedSet.has(email);
     return (
       <li className="email-card">
-        <div className="email-row">
-          <div className="email-col">
+        <div className="email-left">
+          <div className="email-row-top">
             <div className="email-address">
               {isRevealed ? email : maskEmail(email)}
               {e.confidence != null && <span className="trust">{e.confidence}%</span>}
@@ -209,20 +181,20 @@ export default function IndexPage() {
                 <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
                 {e.position ? <span className="position"> — {e.position}</span> : null}
               </div>
-              {/* only show department when it's not "Other" */}
               {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
             </div>
           </div>
 
           <div className="email-actions">
             {!isRevealed ? (
-              <button className="cta-button ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
+              <button className="cta primary ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
             ) : !isSaved ? (
-              <button className="cta-button primary" onClick={() => handleSave(email)} type="button">Save</button>
+              <button className="cta primary" onClick={() => handleSave(email)} type="button">Save</button>
             ) : (
-              <button className="cta-button saved" type="button" disabled>Saved</button>
+              <button className="cta saved" type="button" disabled>Saved</button>
             )}
-            <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
+
+            <a className="source" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
           </div>
         </div>
       </li>
@@ -237,7 +209,6 @@ export default function IndexPage() {
       <Head>
         <title>NovaHunt.ai</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Find business emails instantly" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
@@ -261,11 +232,12 @@ export default function IndexPage() {
           <div className="hint muted">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
 
           <div className="actions-row">
-            <button type="submit" className="cta-button primary" disabled={loading}>
+            {/* both controls use the same CTA styling and font so they look identical */}
+            <button type="submit" className="cta primary" disabled={loading}>
               {loading ? 'Searching…' : 'Take us for a test drive'}
             </button>
 
-            <a className="cta-button primary" href="/checkout">Choose Your Plan</a>
+            <a className="cta primary" href="/checkout" role="button">Choose Your Plan</a>
           </div>
         </form>
 
@@ -278,16 +250,12 @@ export default function IndexPage() {
 
         {error && <div className="msg msg-error" role="alert">{error}</div>}
 
-        {/* Centered results area */}
         <div className="results-wrap">
-          {/* initial grouped preview */}
           {payload && Object.keys(initialGrouped).length > 0 && (
             <section className="results initial" aria-live="polite">
               {Object.entries(initialGrouped).map(([dept, items]) => (
                 <div key={dept} className="initial-group">
-                  <div className="dept-heading">
-                    {dept} <span className="dept-count">({items.length})</span>
-                  </div>
+                  <div className="dept-heading">{dept} <span className="dept-count">({items.length})</span></div>
                   <ul className="email-list">
                     {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
                   </ul>
@@ -296,15 +264,12 @@ export default function IndexPage() {
             </section>
           )}
 
-          {/* Expanded groups below */}
           {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
             <section className="groups">
               {groups.executives && groups.executives.length > 0 && (
                 <div className="group">
                   <div className="group-header">
-                    <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">
-                      Executives ({groups.executives.length})
-                    </button>
+                    <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">Executives ({groups.executives.length})</button>
                   </div>
                   {expandedDeps['Executives'] && (
                     <ul className="email-list small">
@@ -317,9 +282,7 @@ export default function IndexPage() {
               {Object.entries(groups.departments).map(([dept, items]) => (
                 <div className="group" key={dept}>
                   <div className="group-header">
-                    <button className="group-toggle" onClick={() => toggleDept(dept)} type="button">
-                      {dept} ({items.length})
-                    </button>
+                    <button className="group-toggle" onClick={() => toggleDept(dept)} type="button">{dept} ({items.length})</button>
                   </div>
 
                   {expandedDeps[dept] && (
@@ -335,121 +298,98 @@ export default function IndexPage() {
       </main>
 
       <style jsx>{`
+        /* global / layout */
         * { box-sizing: border-box; }
         html, body, #__next { height: 100%; }
-        body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
         .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
 
-        /* Brand */
-        .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; }
+        /* BRAND: restored large size and Inter font */
+        .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .lead { font-size:28px; color:#4b5563; max-width:920px; margin:0 0 18px; }
 
-        /* Form area */
+        /* FORM/UI */
         .domain-form { width:100%; max-width:980px; display:flex; flex-direction:column; align-items:center; }
-        input[type="text"] { width:100%; max-width:820px; padding:18px; font-size:20px; border:2px solid #d1d5db; border-radius:18px; margin-bottom:8px; outline:none; }
-        input[type="text"]:focus { box-shadow:0 8px 30px rgba(0,102,255,0.08); border-color:#0066ff; }
+        input[type="text"] { width:100%; max-width:820px; padding:18px; font-size:20px; border:2px solid #d1d5db; border-radius:18px; margin-bottom:8px; outline:none; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        input[type="text"]:focus { box-shadow:0 18px 36px rgba(0,102,255,0.09); border-color:#0066ff; }
 
         .hint { margin:8px 0 14px; color:#6b7280; font-size:14px; max-width:820px; text-align:left; }
 
         .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:12px; }
 
-        /* Primary CTA shared style (buttons & plan link) */
-        .cta-button {
+        /* single CTA style applied to both button and anchor */
+        .cta {
           display:inline-flex;
           align-items:center;
           justify-content:center;
           gap:8px;
           border-radius:14px;
-          padding:14px 28px;
+          padding:14px 32px;
           font-weight:800;
           font-size:18px;
           text-decoration:none;
           cursor:pointer;
-          border: none;
-          transition: transform .06s ease, box-shadow .12s ease;
+          border:none;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          line-height:1;
         }
-        .cta-button.primary {
+        .cta.primary {
           background: linear-gradient(180deg, #007bff, #0066ff);
           color: #fff;
-          box-shadow: 0 18px 40px rgba(0,102,255,0.22), 0 6px 18px rgba(0,102,255,0.12);
+          box-shadow: 0 22px 48px rgba(0,102,255,0.24), 0 8px 22px rgba(0,102,255,0.12);
         }
-        .cta-button.primary:hover { transform: translateY(-2px); box-shadow: 0 26px 60px rgba(0,102,255,0.26), 0 8px 26px rgba(0,102,255,0.14); }
-        .cta-button.ghost { background: #fff; color: #0066ff; border: 2px solid #e6f0ff; box-shadow: none; }
-        .cta-button.saved { background:#10b981; color:#fff; box-shadow: 0 12px 30px rgba(16,185,129,0.18); }
+        .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 30px 72px rgba(0,102,255,0.28), 0 10px 26px rgba(0,102,255,0.14); }
+        .cta.ghost { background: #fff; color:#0066ff; border: 1px solid rgba(0,102,255,0.08); }
+        .cta.saved { background:#10b981; color:#fff; }
 
-        /* Summary */
+        /* Summary & results */
         .summary.centered { display:flex; flex-direction:row; justify-content:space-between; gap:20px; align-items:center; margin-top:20px; width:100%; max-width:920px; }
         .summary-left { color:#374151; font-size:15px; }
-        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0)); }
+        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; }
 
-        .msg { max-width:920px; margin-top:16px; padding:12px 16px; border-radius:10px; }
-        .msg-error { background:#fff1f2; color:#9b1c1c; border:1px solid #ffd6d9; }
-
-        /* Results wrapper centered and wider */
         .results-wrap { width:100%; max-width:920px; margin-top:20px; display:flex; flex-direction:column; align-items:center; }
 
-        .results h2 { font-size:18px; margin:8px 0 12px; width:100%; }
-
-        /* Department heading */
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
         .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
 
         .groups { width:100%; margin-top:18px; }
 
-        .group { margin-bottom:12px; }
-        .group-header { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-        .group-toggle {
-          background:linear-gradient(180deg,#ffffff,#fbfbfb);
-          border:1px solid #e6e8eb;
-          padding:8px 12px;
-          border-radius:10px;
-          cursor:pointer;
-          font-weight:800;
-          color:#0f172a;
-          font-size:15px;
-        }
+        .group-toggle { background:linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid #e6e8eb; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; color:#0f172a; font-size:15px; }
 
         .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:16px; width:100%; }
-        .email-list.small { margin-top:8px; }
-
         .email-card { background:white; border-radius:14px; padding:14px 18px; box-shadow:0 14px 34px rgba(15,23,42,0.06); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-        .email-row { display:flex; align-items:flex-start; gap:12px; width:100%; justify-content:space-between; }
+        .email-row-top { display:flex; gap:12px; width:100%; flex-direction:column; align-items:flex-start; }
 
-        .email-col { flex:1 1 70%; min-width: 0; }
         .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; display:flex; align-items:center; gap:8px; }
         .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        .email-actions { display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
-        .source-link { color:#fff; background:transparent; color:#0066ff; text-decoration:underline; font-size:13px; }
+        .email-actions { display:flex; gap:10px; align-items:center; margin-top:12px; }
+        .source { color:#0066ff; text-decoration:underline; font-weight:700; }
 
         .meta { margin-top:10px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; }
         .name { color:#111827; font-weight:700; }
         .position { color:#374151; font-weight:600; }
         .department { color:#6b7280; font-size:13px; }
 
-        /* Mobile adjustments */
-        @media (max-width: 920px) {
-          .domain-form { max-width: 96%; }
-          .lead { max-width: 96%; font-size:22px; }
+        /* mobile adjustments */
+        @media (max-width:920px) {
+          .domain-form { max-width:96%; }
+          .lead { max-width:96%; font-size:22px; }
           .summary.centered { flex-direction:column; align-items:center; gap:8px; }
-          .email-card { padding:12px; }
         }
-
         @media (max-width:768px) {
           .page-root { padding:34px 16px; }
           .brand { font-size:48px; }
           .lead { font-size:20px; margin-bottom:12px; }
           input[type="text"] { font-size:18px; padding:14px; }
-          .cta-button { padding:12px 18px; font-size:16px; }
-          .email-row { flex-direction:column; align-items:flex-start; gap:10px; }
-          .email-actions { align-self:flex-end; }
+          .cta { padding:12px 20px; font-size:16px; }
+          .email-card { padding:12px; }
+          .email-actions { width:100%; justify-content:space-between; }
         }
-
         @media (max-width:420px) {
           .actions-row { flex-direction:column; gap:12px; }
           .email-card { flex-direction:column; align-items:flex-start; }
-          .email-actions { width:100%; display:flex; justify-content:space-between; gap:10px; margin-top:8px; }
         }
       `}</style>
     </>
