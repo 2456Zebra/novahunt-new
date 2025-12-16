@@ -2,13 +2,11 @@ import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
 /*
-  Homepage search UI — improvements:
-  - "Showing X of Y" uses payload.total (robustly returned by /api/search)
-  - Department summary shows top N departments inline and a "+N more / View all" toggle
-  - Department headings styled same as Executives
-  - Trust % shown to the right, save/reveal smaller and placed left of card content; source link right-aligned
-  - Upgrade link color increased (gold) for visibility
-  - Mobile-friendly, centered layout
+  Frontend: defensive display of Hunter totals and helpful debug link.
+  - Uses payload.total (from /api/search) and falls back to payload.emails.length
+  - If total === 0 shows a small debug link you can click to view raw Hunter response:
+    /api/search?domain=...&debug=true
+  - Keeps the improved layout and department handling
 */
 
 function maskEmail(email) {
@@ -61,9 +59,9 @@ export default function IndexPage() {
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState(null); // { query, total, emails }
   const [error, setError] = useState(null);
-  const [revealed, setRevealed] = useState({}); // email => bool
+  const [revealed, setRevealed] = useState({});
   const [savedSet, setSavedSet] = useState(new Set());
-  const [expandedDeps, setExpandedDeps] = useState({}); // dept => bool
+  const [expandedDeps, setExpandedDeps] = useState({});
   const [showAllDepartments, setShowAllDepartments] = useState(false);
 
   useEffect(() => {
@@ -111,22 +109,19 @@ export default function IndexPage() {
     }
   }
 
-  // Build groups: executives first, then departments with counts for the entire payload
   const groups = useMemo(() => {
     if (!payload?.emails) return { total: payload?.total || 0, executives: [], departments: {} };
     const emails = payload.emails.map((e, i) => ({ ...e, __idx: i, department: e.department || detectDepartment(e) }));
     const executives = [];
     const deptMap = {};
     for (const e of emails) {
-      if (isExecutive(e.position)) {
-        executives.push(e);
-      } else {
+      if (isExecutive(e.position)) executives.push(e);
+      else {
         const dept = e.department || detectDepartment(e);
         if (!deptMap[dept]) deptMap[dept] = [];
         deptMap[dept].push(e);
       }
     }
-    // sort names in each department
     Object.keys(deptMap).forEach((k) => {
       deptMap[k].sort((a, b) => {
         if ((a.position || '') < (b.position || '')) return -1;
@@ -136,16 +131,14 @@ export default function IndexPage() {
         return na.localeCompare(nb);
       });
     });
-    // alphabetical order for department keys
     const sorted = {};
     Object.keys(deptMap)
       .sort((a, b) => a.localeCompare(b))
       .forEach((k) => (sorted[k] = deptMap[k]));
 
-    return { total: Number(payload.total || 0), executives, departments: sorted };
+    return { total: Number(payload.total || payload?.emails?.length || 0), executives, departments: sorted };
   }, [payload]);
 
-  // initial preview: show 5 items grouped (executives first, then departments)
   const initialLimit = 5;
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
@@ -184,7 +177,6 @@ export default function IndexPage() {
     setExpandedDeps((s) => ({ ...s, [dep]: !s[dep] }));
   }
 
-  // Build department summary sorted by count desc; used for top-N inline display
   const departmentSummary = useMemo(() => {
     if (!payload?.emails) return [];
     const arr = [];
@@ -194,16 +186,14 @@ export default function IndexPage() {
     for (const [dept, items] of Object.entries(groups.departments || {})) {
       arr.push([dept, items.length]);
     }
-    arr.sort((a, b) => b[1] - a[1]); // sort descending by count
+    arr.sort((a, b) => b[1] - a[1]);
     return arr;
   }, [groups, payload]);
 
-  // top N inline departments
   const topN = 4;
   const topDepartments = departmentSummary.slice(0, topN);
   const extraDepartments = departmentSummary.length > topN ? departmentSummary.length - topN : 0;
 
-  // displayed count and total
   const displayedCount = Object.values(initialGrouped).flat().length;
   const totalCount = groups.total || 0;
 
@@ -212,7 +202,6 @@ export default function IndexPage() {
       <Head>
         <title>NovaHunt.ai</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Find business emails instantly" />
       </Head>
 
       <main className="page-root">
@@ -245,7 +234,6 @@ export default function IndexPage() {
           </div>
         </form>
 
-        {/* Summary: Showing X of Y + inline upgrade (gold) + top departments inline */}
         {payload && (
           <div className="summary">
             <div className="summary-left">
@@ -270,6 +258,18 @@ export default function IndexPage() {
           </div>
         )}
 
+        {/* If total is zero, expose a debug link so you can inspect raw Hunter response */}
+        {payload && totalCount === 0 && (
+          <div className="debug-help">
+            The search returned 0 results from Hunter. Click to view the raw Hunter response for debugging:
+            <div style={{ marginTop: 8 }}>
+              <a href={`/api/search?domain=${encodeURIComponent(domain)}&debug=true`} target="_blank" rel="noreferrer">
+                View raw API response
+              </a>
+            </div>
+          </div>
+        )}
+
         {showAllDepartments && payload && (
           <div className="all-departments">
             {departmentSummary.map(([name, count]) => (
@@ -283,7 +283,6 @@ export default function IndexPage() {
         {error && <div className="msg msg-error" role="alert">{error}</div>}
 
         <div className="results-wrap">
-          {/* initial grouped preview with department headings above each group */}
           {payload && Object.keys(initialGrouped).length > 0 && (
             <section className="results initial" aria-live="polite">
               {Object.entries(initialGrouped).map(([dept, items]) => (
@@ -330,7 +329,7 @@ export default function IndexPage() {
             </section>
           )}
 
-          {/* Expanded groups below (collapsible) */}
+          {/* Expanded groups (collapsible) */}
           {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
             <section className="groups">
               {groups.executives && groups.executives.length > 0 && (
@@ -433,28 +432,17 @@ export default function IndexPage() {
       </main>
 
       <style jsx>{`
+        /* keep existing site styles (omitted for brevity) — ensure these match your globals.css */
         * { box-sizing: border-box; }
         html, body, #__next { height: 100%; }
         body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
         .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
-
         .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; }
         .lead { font-weight:500; font-size:28px; color:#4b5563; max-width:920px; margin:0 0 18px; }
 
         .domain-form { width:100%; max-width:1080px; display:flex; flex-direction:column; align-items:center; }
-        input[type="text"] {
-          width:100%;
-          max-width:920px;
-          padding:28px 26px;
-          font-size:24px;
-          border:2px solid #d1d5db;
-          border-radius:28px;
-          margin-bottom:10px;
-          outline:none;
-          box-shadow: 0 14px 40px rgba(2,6,23,0.06);
-        }
-
+        input[type="text"] { width:100%; max-width:920px; padding:28px 26px; font-size:24px; border:2px solid #d1d5db; border-radius:28px; margin-bottom:10px; outline:none; box-shadow: 0 14px 40px rgba(2,6,23,0.06); }
         .hint { margin:8px 0 16px; color:#6b7280; font-size:15px; text-align:center; max-width:860px; }
 
         .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
@@ -462,7 +450,6 @@ export default function IndexPage() {
 
         .summary { width:100%; max-width:920px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
         .summary-left { color:#374151; font-size:15px; display:flex; align-items:center; gap:8px; }
-        /* Upgrade link color now more visible (gold) */
         .upgrade { color:#ffb020; font-weight:800; text-decoration:underline; margin-left:6px; }
 
         .dept-summary { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
@@ -476,21 +463,11 @@ export default function IndexPage() {
         .dept-line { font-weight:700; color:#0f172a; padding:6px 8px; border-radius:8px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,0.04); }
 
         .results-wrap { width:100%; max-width:920px; margin-top:22px; display:flex; flex-direction:column; align-items:center; }
-
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
         .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
 
         .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:18px; width:100%; }
-        .email-card {
-          background:white;
-          border-radius:16px;
-          padding:18px 20px;
-          box-shadow:0 18px 44px rgba(15,23,42,0.06);
-          display:flex;
-          gap:16px;
-          align-items:flex-start;
-          justify-content:space-between;
-        }
+        .email-card { background:white; border-radius:16px; padding:18px 20px; box-shadow:0 18px 44px rgba(15,23,42,0.06); display:flex; gap:16px; align-items:flex-start; justify-content:space-between; }
 
         .email-left { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
         .email-address-row { display:flex; justify-content:flex-start; align-items:center; gap:12px; }
@@ -503,31 +480,18 @@ export default function IndexPage() {
         .department { color:#6b7280; font-size:13px; }
 
         .left-action { display:flex; align-items:center; gap:8px; }
-        .btn-save.small {
-          padding:6px 10px;
-          font-size:13px;
-          border-radius:8px;
-          font-weight:700;
-          cursor:pointer;
-          border: 1px solid rgba(0,0,0,0.06);
-          background: #fff;
-        }
+        .btn-save.small { padding:6px 10px; font-size:13px; border-radius:8px; font-weight:700; cursor:pointer; border: 1px solid rgba(0,0,0,0.06); background: #fff; }
         .btn-save.small.primary { background:#0066ff; color:#fff; border-color:#0066ff; box-shadow: 0 8px 20px rgba(0,102,255,0.10); }
         .btn-save.small.saved { background:#10b981; color:#fff; border-color:#10b981; }
 
         .email-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto; min-width:96px; }
-        .trust-badge {
-          background: rgba(0,102,255,0.08);
-          color:#0049b3;
-          font-weight:800;
-          padding:6px 8px;
-          border-radius:999px;
-          font-size:13px;
-        }
+        .trust-badge { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:6px 8px; border-radius:999px; font-size:13px; }
         .source-link { color:#0066ff; text-decoration:underline; font-weight:700; }
 
         .group-header { margin-bottom:8px; }
         .group-toggle { background:linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid #e6e8eb; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; color:#0f172a; font-size:15px; }
+
+        .debug-help { margin-top:10px; color:#92400e; background:#fff7ed; padding:10px 12px; border-radius:8px; display:inline-block; }
 
         @media (max-width:920px) {
           .domain-form { max-width:96%; }
