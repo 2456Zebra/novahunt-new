@@ -1,9 +1,19 @@
 import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
-/* Homepage — larger centered search rectangle, centered hint, consistent Inter font */
+/*
+  Updated homepage search UI — Search results refinements requested:
+  - "Showing X of Y" uses Hunter total (payload.total)
+  - Departments list and headings use same visual style (Executives header used for all)
+  - Trust % moved to the right side of the card (separated from email)
+  - Save/Reveal button reduced in size
+  - Save button placed on the left inside card; "source" link placed on the right
+  - "Upgrade your plan to see all" placed inline next to "Showing X of Y"
+  - Initial preview shows 5 results (not signed in)
+  - Department headings aligned and use consistent font/size/style
+  - Wider, centered results area and mobile-friendly layout
+*/
 
-/* Helpers */
 function maskEmail(email) {
   if (!email) return '';
   const [local, domain] = email.split('@');
@@ -11,6 +21,7 @@ function maskEmail(email) {
   if (local.length <= 2) return local[0] + '***@' + domain;
   return local[0] + '***' + local.slice(-1) + '@' + domain;
 }
+
 function isExecutive(position = '') {
   if (!position) return false;
   const p = position.toLowerCase();
@@ -27,6 +38,7 @@ function isExecutive(position = '') {
     p.includes('principal')
   );
 }
+
 function detectDepartment(emailItem = {}) {
   if (emailItem.department && emailItem.department.trim()) return emailItem.department.trim();
   const pos = (emailItem.position || '').toLowerCase();
@@ -36,6 +48,7 @@ function detectDepartment(emailItem = {}) {
   }
   return 'Other';
 }
+
 function linkedinSearchUrl(person, domain) {
   let query = domain || '';
   if (person?.first_name || person?.last_name) {
@@ -49,11 +62,11 @@ function linkedinSearchUrl(person, domain) {
 export default function IndexPage() {
   const [domain, setDomain] = useState('');
   const [loading, setLoading] = useState(false);
-  const [payload, setPayload] = useState(null);
+  const [payload, setPayload] = useState(null); // { query, total, emails }
   const [error, setError] = useState(null);
-  const [revealed, setRevealed] = useState({});
-  const [savedSet, setSavedSet] = useState(new Set());
-  const [expandedDeps, setExpandedDeps] = useState({});
+  const [revealed, setRevealed] = useState({}); // email => boolean
+  const [savedSet, setSavedSet] = useState(new Set()); // saved emails (local placeholder)
+  const [expandedDeps, setExpandedDeps] = useState({}); // dept => bool
 
   useEffect(() => {
     try {
@@ -62,13 +75,13 @@ export default function IndexPage() {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) setSavedSet(new Set(arr));
       }
-    } catch (err) {}
+    } catch (err) { /* ignore */ }
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem('nova_saved_contacts', JSON.stringify(Array.from(savedSet)));
-    } catch (err) {}
+    } catch (err) { /* ignore */ }
   }, [savedSet]);
 
   async function runTestDrive(e) {
@@ -84,8 +97,10 @@ export default function IndexPage() {
     try {
       const res = await fetch(`/api/search?domain=${encodeURIComponent(d)}`);
       const json = await res.json();
-      if (!res.ok) setError(json.error || 'Search failed');
-      else {
+      if (!res.ok) {
+        setError(json.error || 'Search failed');
+      } else {
+        // API returns { query, total, emails }
         setPayload(json);
         setExpandedDeps({});
         setRevealed({});
@@ -98,19 +113,22 @@ export default function IndexPage() {
     }
   }
 
+  // Build groups from payload, preserving Executives first
   const groups = useMemo(() => {
     if (!payload?.emails) return { total: payload?.total || 0, executives: [], departments: {} };
     const emails = payload.emails.map((e, i) => ({ ...e, __idx: i }));
     const executives = [];
     const deptMap = {};
     for (const e of emails) {
-      if (isExecutive(e.position)) executives.push(e);
-      else {
+      if (isExecutive(e.position)) {
+        executives.push(e);
+      } else {
         const dept = detectDepartment(e);
         if (!deptMap[dept]) deptMap[dept] = [];
         deptMap[dept].push(e);
       }
     }
+    // sort items within departments
     Object.keys(deptMap).forEach((k) => {
       deptMap[k].sort((a, b) => {
         if ((a.position || '') < (b.position || '')) return -1;
@@ -120,12 +138,14 @@ export default function IndexPage() {
         return na.localeCompare(nb);
       });
     });
-    const sortedDeptMap = {};
-    const deptNames = Object.keys(deptMap).sort((a, b) => a.localeCompare(b));
-    for (const name of deptNames) sortedDeptMap[name] = deptMap[name];
-    return { total: payload.total || emails.length, executives, departments: sortedDeptMap };
+    // sort department names alphabetically
+    const sorted = {};
+    const names = Object.keys(deptMap).sort((a, b) => a.localeCompare(b));
+    for (const n of names) sorted[n] = deptMap[n];
+    return { total: payload.total || emails.length, executives, departments: sorted };
   }, [payload]);
 
+  // initial preview limit: 5 for not-signed-in users
   const initialLimit = 5;
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
@@ -153,6 +173,7 @@ export default function IndexPage() {
   function toggleReveal(email) {
     setRevealed((p) => ({ ...p, [email]: true }));
   }
+
   function handleSave(email) {
     setSavedSet((s) => {
       const next = new Set(s);
@@ -160,10 +181,12 @@ export default function IndexPage() {
       return next;
     });
   }
+
   function toggleDept(dep) {
     setExpandedDeps((s) => ({ ...s, [dep]: !s[dep] }));
   }
 
+  // Email card component — smaller save button, trust moved right, source on far-right
   function EmailCard({ e }) {
     const email = e.value;
     const isRevealed = !!revealed[email];
@@ -171,31 +194,35 @@ export default function IndexPage() {
     return (
       <li className="email-card">
         <div className="email-left">
-          <div className="email-row-top">
-            <div className="email-address">
-              {isRevealed ? email : maskEmail(email)}
-              {e.confidence != null && <span className="trust">{e.confidence}%</span>}
-            </div>
+          <div className="email-address-row">
+            <div className="email-address">{isRevealed ? email : maskEmail(email)}</div>
+          </div>
+
+          <div className="meta-and-actions">
             <div className="meta">
               <div className="name-position">
                 <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
                 {e.position ? <span className="position"> — {e.position}</span> : null}
               </div>
+              {/* do not display 'Other' as a department badge under person's title */}
               {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
             </div>
-          </div>
 
-          <div className="email-actions">
-            {!isRevealed ? (
-              <button className="cta primary ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
-            ) : !isSaved ? (
-              <button className="cta primary" onClick={() => handleSave(email)} type="button">Save</button>
-            ) : (
-              <button className="cta saved" type="button" disabled>Saved</button>
-            )}
-
-            <a className="source" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
+            <div className="left-action">
+              {!isRevealed ? (
+                <button className="btn-save small ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
+              ) : !isSaved ? (
+                <button className="btn-save small primary" onClick={() => handleSave(email)} type="button">Save</button>
+              ) : (
+                <button className="btn-save small saved" type="button" disabled>Saved</button>
+              )}
+            </div>
           </div>
+        </div>
+
+        <div className="email-right">
+          {e.confidence != null && <div className="trust-badge">{e.confidence}%</div>}
+          <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
         </div>
       </li>
     );
@@ -204,13 +231,25 @@ export default function IndexPage() {
   const displayedCount = Object.values(initialGrouped).flat().length;
   const totalCount = groups.total || 0;
 
+  // Build department summary (show all departments + their counts, Executives first)
+  const departmentSummary = useMemo(() => {
+    if (!payload?.emails) return [];
+    const entries = [];
+    if (groups.executives && groups.executives.length > 0) {
+      entries.push(['Executives', groups.executives.length]);
+    }
+    for (const [dept, items] of Object.entries(groups.departments || {})) {
+      entries.push([dept, items.length]);
+    }
+    return entries;
+  }, [groups, payload]);
+
   return (
     <>
       <Head>
         <title>NovaHunt.ai</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Load Inter with weights used in your reference */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <meta name="description" content="Find business emails instantly" />
       </Head>
 
       <main className="page-root">
@@ -230,8 +269,7 @@ export default function IndexPage() {
             autoComplete="off"
           />
 
-          {/* centered hint directly below the larger input */}
-          <div className="hint muted">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
+          <div className="hint">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
 
           <div className="actions-row">
             <button type="submit" className="cta primary" disabled={loading}>
@@ -242,16 +280,29 @@ export default function IndexPage() {
           </div>
         </form>
 
+        {/* Summary with upgrade link placed inline left of summary text */}
         {payload && (
-          <div className="summary centered">
-            <div className="summary-left">Showing <strong>{displayedCount}</strong> of <strong>{totalCount}</strong></div>
-            <div className="summary-right"><a className="upgrade" href="/checkout">Upgrade your plan to see all</a></div>
+          <div className="summary">
+            <div className="summary-left">
+              Showing <strong>{displayedCount}</strong> of <strong>{totalCount}</strong>
+              <span className="upgrade-inline"> — <a href="/checkout" className="upgrade">Upgrade your plan to see all</a></span>
+            </div>
+
+            {/* department summary (Executives + departments) displayed to the right but in same line on wide screens */}
+            <div className="dept-summary">
+              {departmentSummary.map(([name, count]) => (
+                <div className="dept-pill" key={name}>
+                  <span className="dept-name">{name}</span> <span className="dept-num">({count})</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {error && <div className="msg msg-error" role="alert">{error}</div>}
 
         <div className="results-wrap">
+          {/* initial grouped preview with department headings above each group */}
           {payload && Object.keys(initialGrouped).length > 0 && (
             <section className="results initial" aria-live="polite">
               {Object.entries(initialGrouped).map(([dept, items]) => (
@@ -265,12 +316,15 @@ export default function IndexPage() {
             </section>
           )}
 
+          {/* Expanded groups below */}
           {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
             <section className="groups">
               {groups.executives && groups.executives.length > 0 && (
                 <div className="group">
                   <div className="group-header">
-                    <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">Executives ({groups.executives.length})</button>
+                    <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">
+                      Executives ({groups.executives.length})
+                    </button>
                   </div>
                   {expandedDeps['Executives'] && (
                     <ul className="email-list small">
@@ -305,22 +359,9 @@ export default function IndexPage() {
 
         .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
 
-        /* Brand */
         .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; }
+        .lead { font-weight:500; font-size:28px; color:#4b5563; max-width:920px; margin:0 0 18px; }
 
-        /* Lead paragraph */
-        .lead {
-          font-weight:500;
-          font-size:28px;
-          line-height:1.25;
-          letter-spacing:-0.01em;
-          color:#4b5563;
-          max-width:920px;
-          margin:0 0 18px;
-          font-family:'Inter', system-ui, -apple-system, sans-serif;
-        }
-
-        /* Search area: larger, less technical, centered */
         .domain-form { width:100%; max-width:1080px; display:flex; flex-direction:column; align-items:center; }
         input[type="text"] {
           width:100%;
@@ -332,84 +373,94 @@ export default function IndexPage() {
           margin-bottom:10px;
           outline:none;
           box-shadow: 0 14px 40px rgba(2,6,23,0.06);
-          font-family:'Inter', system-ui, -apple-system, sans-serif;
         }
-        input[type="text"]::placeholder { color:#9ca3af; font-weight:400; }
 
-        /* centered hint below input; matches reference */
-        .hint {
-          margin:8px 0 16px;
-          color:#6b7280;
-          font-size:15px;
-          text-align:center;
-          max-width:860px;
-        }
+        .hint { margin:8px 0 16px; color:#6b7280; font-size:15px; text-align:center; max-width:860px; }
 
         .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+        .cta { display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:16px; padding:16px 36px; font-weight:800; font-size:18px; text-decoration:none; cursor:pointer; border:none; background: linear-gradient(180deg,#007bff,#0066ff); color:#fff; box-shadow: 0 32px 80px rgba(0,102,255,0.22), 0 10px 30px rgba(0,102,255,0.12); }
 
-        /* CTA (shared) */
-        .cta {
-          display:inline-flex;
-          align-items:center;
-          justify-content:center;
-          gap:8px;
-          border-radius:16px;
-          padding:16px 36px;
-          font-weight:800;
-          font-size:18px;
-          text-decoration:none;
-          cursor:pointer;
-          border:none;
-          line-height:1;
-          font-family:'Inter', system-ui, -apple-system, sans-serif;
-        }
-        .cta.primary {
-          background: linear-gradient(180deg, #007bff, #0066ff);
-          color:#fff;
-          box-shadow: 0 32px 80px rgba(0,102,255,0.22), 0 10px 30px rgba(0,102,255,0.12);
-        }
-        .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 38px 96px rgba(0,102,255,0.28), 0 12px 34px rgba(0,102,255,0.14); }
+        .summary { width:100%; max-width:920px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+        .summary-left { color:#374151; font-size:15px; display:flex; align-items:center; gap:8px; }
+        .upgrade-inline .upgrade { color:#ffd166; font-weight:700; text-decoration:underline; margin-left:6px; }
 
-        .summary.centered { display:flex; flex-direction:row; justify-content:space-between; gap:20px; align-items:center; margin-top:20px; width:100%; max-width:920px; }
-        .summary-left { color:#374151; font-size:15px; }
-        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; }
+        /* Department summary (pill list) */
+        .dept-summary { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+        .dept-pill { background:transparent; padding:6px 8px; border-radius:8px; font-weight:700; color:#0f172a; display:flex; gap:6px; align-items:center; }
+        .dept-name { font-weight:800; font-size:15px; }
+        .dept-num { color:#6b7280; font-weight:700; font-size:13px; }
 
         .results-wrap { width:100%; max-width:920px; margin-top:22px; display:flex; flex-direction:column; align-items:center; }
 
+        /* Department heading uses same style as Executives heading */
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
         .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
 
         .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:18px; width:100%; }
-        .email-card { background:white; border-radius:16px; padding:18px 20px; box-shadow:0 18px 44px rgba(15,23,42,0.06); display:flex; align-items:flex-start; gap:12px; }
+        .email-card {
+          background:white;
+          border-radius:16px;
+          padding:18px 20px;
+          box-shadow:0 18px 44px rgba(15,23,42,0.06);
+          display:flex;
+          gap:16px;
+          align-items:flex-start;
+          justify-content:space-between;
+        }
+
+        .email-left { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
+        .email-address-row { display:flex; justify-content:flex-start; align-items:center; gap:12px; }
         .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; }
-        .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        .email-actions { display:flex; gap:10px; align-items:center; margin-top:12px; }
-        .source { color:#0066ff; text-decoration:underline; font-weight:700; }
-
-        .meta { margin-top:10px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; }
+        .meta-and-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .meta { color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; text-align:left; }
         .name { color:#111827; font-weight:700; }
         .position { color:#374151; font-weight:600; }
         .department { color:#6b7280; font-size:13px; }
 
-        /* mobile */
+        /* Left small save button */
+        .left-action { display:flex; align-items:center; gap:8px; }
+        .btn-save.small {
+          padding:6px 10px;
+          font-size:13px;
+          border-radius:8px;
+          font-weight:700;
+          cursor:pointer;
+          border: 1px solid rgba(0,0,0,0.06);
+          background: #fff;
+        }
+        .btn-save.small.primary { background:#0066ff; color:#fff; border-color:#0066ff; box-shadow: 0 8px 20px rgba(0,102,255,0.10); }
+        .btn-save.small.saved { background:#10b981; color:#fff; border-color:#10b981; }
+
+        /* Right area: trust + source */
+        .email-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto; min-width:96px; }
+        .trust-badge {
+          background: rgba(0,102,255,0.08);
+          color:#0049b3;
+          font-weight:800;
+          padding:6px 8px;
+          border-radius:999px;
+          font-size:13px;
+        }
+        .source-link { color:#0066ff; text-decoration:underline; font-weight:700; }
+
+        /* Group headers */
+        .group-header { margin-bottom:8px; }
+        .group-toggle { background:linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid #e6e8eb; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; color:#0f172a; font-size:15px; }
+
+        /* Responsive adjustments */
         @media (max-width:920px) {
+          .domain-form { max-width:96%; }
           input[type="text"] { max-width:92%; padding:22px 18px; font-size:20px; }
-          .lead { max-width:92%; font-size:22px; }
-          .summary.centered { flex-direction:column; align-items:center; gap:8px; }
+          .summary { flex-direction:column; align-items:center; gap:10px; }
+          .dept-summary { justify-content:center; }
         }
         @media (max-width:768px) {
-          .page-root { padding:36px 14px; }
           .brand { font-size:48px; }
-          .lead { font-size:20px; }
+          .lead { font-size:22px; }
           .cta { padding:12px 20px; font-size:16px; }
-          .email-card { padding:12px; }
-          .email-actions { width:100%; justify-content:space-between; }
-        }
-        @media (max-width:420px) {
-          .actions-row { flex-direction:column; gap:12px; }
-          .email-card { flex-direction:column; align-items:flex-start; }
-          .hint { font-size:14px; }
+          .email-card { padding:12px; flex-direction:column; align-items:flex-start; }
+          .email-right { align-self:stretch; flex-direction:row; justify-content:space-between; width:100%; margin-top:8px; }
         }
       `}</style>
     </>
