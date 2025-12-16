@@ -1,20 +1,18 @@
-// Minimal server-rendered Account page that reads a sample profile (safe example).
-// This file uses the server supabase client via createSupabaseClient(true).
-// You can replace the sample query with your real logic later.
-
+// Minimal server-rendered Account page that uses the centralized Supabase client.
+// Keeps the UI simple and resilient to missing env vars (uses noop client fallback).
 import React from 'react';
 import { createSupabaseClient } from '../../lib/supabaseClient';
 
 export default async function AccountPage() {
   let profile = null;
   try {
-    const supabase = createSupabaseClient(true); // server-side client
-    // Example read — adapt table name to your schema. This is a safe sample query.
+    const supabase = createSupabaseClient(true); // server-side client (or noop)
     const { data, error } = await supabase.from('profiles').select('id, username, email').limit(1);
     if (!error && data && data.length > 0) profile = data[0];
   } catch (err) {
-    // swallow errors for now so page still renders (log in server if you want)
-    console.error('Supabase account page error:', err);
+    // don't break the build — log server-side
+    // eslint-disable-next-line no-console
+    console.error('AccountPage supabase error:', err);
   }
 
   return (
@@ -28,7 +26,7 @@ export default async function AccountPage() {
       ) : (
         <div>
           <p>No account data available. This is a placeholder account page.</p>
-          <p>If you expect data, verify your SUPABASE env keys and that the 'profiles' table exists.</p>
+          <p>If you expect data, verify SUPABASE env keys and the 'profiles' table.</p>
         </div>
       )}
     </main>
