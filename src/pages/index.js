@@ -1,7 +1,9 @@
 import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
-/* Same JS logic as before (omitted for brevity in comments) */
+/* Homepage — larger centered search rectangle, centered hint, consistent Inter font */
+
+/* Helpers */
 function maskEmail(email) {
   if (!email) return '';
   const [local, domain] = email.split('@');
@@ -207,8 +209,8 @@ export default function IndexPage() {
       <Head>
         <title>NovaHunt.ai</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Load Inter with the same subsets/weights used in your example */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        {/* Load Inter with weights used in your reference */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
       <main className="page-root">
@@ -228,6 +230,7 @@ export default function IndexPage() {
             autoComplete="off"
           />
 
+          {/* centered hint directly below the larger input */}
           <div className="hint muted">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
 
           <div className="actions-row">
@@ -302,62 +305,111 @@ export default function IndexPage() {
 
         .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
 
-        /* BRAND: big and using Inter */
-        .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        /* Brand */
+        .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; }
 
-        /* Lead paragraph styling tuned to match your reference */
+        /* Lead paragraph */
         .lead {
-          font-family: 'Inter', system-ui, -apple-system, sans-serif;
-          font-weight: 500;            /* medium weight like reference */
-          font-size: 28px;             /* as requested */
-          line-height: 1.25;           /* tighter leading like reference */
-          letter-spacing: -0.01em;     /* slight negative tracking to match look */
-          color: #4b5563;
-          max-width: 920px;
-          margin: 0 0 18px;
+          font-weight:500;
+          font-size:28px;
+          line-height:1.25;
+          letter-spacing:-0.01em;
+          color:#4b5563;
+          max-width:920px;
+          margin:0 0 18px;
+          font-family:'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        /* Hint (below input) tuned to match reference */
+        /* Search area: larger, less technical, centered */
+        .domain-form { width:100%; max-width:1080px; display:flex; flex-direction:column; align-items:center; }
+        input[type="text"] {
+          width:100%;
+          max-width:920px;
+          padding:28px 26px;
+          font-size:24px;
+          border:2px solid #d1d5db;
+          border-radius:28px;
+          margin-bottom:10px;
+          outline:none;
+          box-shadow: 0 14px 40px rgba(2,6,23,0.06);
+          font-family:'Inter', system-ui, -apple-system, sans-serif;
+        }
+        input[type="text"]::placeholder { color:#9ca3af; font-weight:400; }
+
+        /* centered hint below input; matches reference */
         .hint {
-          font-family: 'Inter', system-ui, -apple-system, sans-serif;
-          font-weight: 400;
-          font-size: 15px;             /* slightly larger than before for legibility */
-          line-height: 1.4;
-          letter-spacing: 0;
-          color: #6b7280;
-          max-width: 820px;
-          text-align: left;
-          margin: 8px 0 14px;
+          margin:8px 0 16px;
+          color:#6b7280;
+          font-size:15px;
+          text-align:center;
+          max-width:860px;
         }
 
-        /* CTA consistent font & size */
-        .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+        .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+
+        /* CTA (shared) */
         .cta {
-          display:inline-flex; align-items:center; justify-content:center; gap:8px;
-          border-radius:14px; padding:14px 32px; font-weight:800; font-size:18px;
-          text-decoration:none; cursor:pointer; border:none; font-family:'Inter', system-ui, -apple-system, sans-serif; line-height:1;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          gap:8px;
+          border-radius:16px;
+          padding:16px 36px;
+          font-weight:800;
+          font-size:18px;
+          text-decoration:none;
+          cursor:pointer;
+          border:none;
+          line-height:1;
+          font-family:'Inter', system-ui, -apple-system, sans-serif;
         }
         .cta.primary {
           background: linear-gradient(180deg, #007bff, #0066ff);
-          color: #fff;
-          box-shadow: 0 22px 48px rgba(0,102,255,0.24), 0 8px 22px rgba(0,102,255,0.12);
+          color:#fff;
+          box-shadow: 0 32px 80px rgba(0,102,255,0.22), 0 10px 30px rgba(0,102,255,0.12);
         }
+        .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 38px 96px rgba(0,102,255,0.28), 0 12px 34px rgba(0,102,255,0.14); }
 
-        /* Results spacing and widths */
-        .results-wrap { width:100%; max-width:920px; margin-top:20px; display:flex; flex-direction:column; align-items:center; }
+        .summary.centered { display:flex; flex-direction:row; justify-content:space-between; gap:20px; align-items:center; margin-top:20px; width:100%; max-width:920px; }
+        .summary-left { color:#374151; font-size:15px; }
+        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; }
+
+        .results-wrap { width:100%; max-width:920px; margin-top:22px; display:flex; flex-direction:column; align-items:center; }
+
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
-        .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:16px; width:100%; }
-        .email-card { background:white; border-radius:14px; padding:16px 20px; box-shadow:0 14px 34px rgba(15,23,42,0.06); display:flex; align-items:flex-start; gap:12px; }
-        .email-address { font-weight:800; color:#0f172a; font-size:16px; }
+        .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
+
+        .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:18px; width:100%; }
+        .email-card { background:white; border-radius:16px; padding:18px 20px; box-shadow:0 18px 44px rgba(15,23,42,0.06); display:flex; align-items:flex-start; gap:12px; }
+        .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; }
         .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        /* adjust sizes for mobile */
+        .email-actions { display:flex; gap:10px; align-items:center; margin-top:12px; }
+        .source { color:#0066ff; text-decoration:underline; font-weight:700; }
+
+        .meta { margin-top:10px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; }
+        .name { color:#111827; font-weight:700; }
+        .position { color:#374151; font-weight:600; }
+        .department { color:#6b7280; font-size:13px; }
+
+        /* mobile */
+        @media (max-width:920px) {
+          input[type="text"] { max-width:92%; padding:22px 18px; font-size:20px; }
+          .lead { max-width:92%; font-size:22px; }
+          .summary.centered { flex-direction:column; align-items:center; gap:8px; }
+        }
         @media (max-width:768px) {
+          .page-root { padding:36px 14px; }
           .brand { font-size:48px; }
-          .lead { font-size:22px; line-height:1.28; }
-          .hint { font-size:14px; }
+          .lead { font-size:20px; }
           .cta { padding:12px 20px; font-size:16px; }
           .email-card { padding:12px; }
+          .email-actions { width:100%; justify-content:space-between; }
+        }
+        @media (max-width:420px) {
+          .actions-row { flex-direction:column; gap:12px; }
+          .email-card { flex-direction:column; align-items:flex-start; }
+          .hint { font-size:14px; }
         }
       `}</style>
     </>
