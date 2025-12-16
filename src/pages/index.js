@@ -2,19 +2,22 @@ import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
 /**
- * Updated homepage search UI with:
- * - initial preview shows 5 results (not-signed-in)
- * - "Showing X of Y — Upgrade your plan to see all" pulls Y from Hunter total
- * - initial preview grouped by department with department headings
- * - "source" single-word link that opens a Google LinkedIn search for the person
- * - confidence/trust % shown as a badge
- * - email masked by default, "Reveal" reveals it and then button becomes "Save" to persist (localStorage)
- * - removed display of "Other" as department under person's meta
- * - improved department typography and wider layout while remaining mobile friendly
+ * Homepage search UI (updated spacing, sizes, and button styles)
  *
- * Save behavior:
- * - saves to localStorage under 'nova_saved_contacts' (placeholder for account integration)
- * - Saved contacts will be reflected in the button state ("Saved")
+ * Key updates in this version:
+ * - Restored large "NovaHunt.ai" heading (72px desktop, 48px mobile)
+ * - Centered results and widened container for readability
+ * - Initial preview shows 5 results; summary reads "Showing 5 of {Hunter total}"
+ * - Both action controls ("Take us for a test drive" and "Choose Your Plan")
+ *   are identical in size, color and glow (primary CTA style)
+ * - Results have improved spacing, larger cards, and mobile-friendly layout
+ * - "source" is a single-word clickable link
+ * - Trust % badge visible next to email
+ * - Reveal -> then "Save" (save persists in localStorage)
+ *
+ * Notes:
+ * - Server API (/api/search) should return { query, total, emails: [...] } where total
+ *   is the Hunter-reported number (used in the "Showing X of Y" text).
  */
 
 function maskEmail(email) {
@@ -67,11 +70,10 @@ export default function IndexPage() {
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState(null); // { query, total, emails }
   const [error, setError] = useState(null);
-  const [revealed, setRevealed] = useState({}); // email => boolean (revealed)
-  const [savedSet, setSavedSet] = useState(new Set()); // saved emails (from localStorage)
+  const [revealed, setRevealed] = useState({}); // email => boolean
+  const [savedSet, setSavedSet] = useState(new Set());
   const [expandedDeps, setExpandedDeps] = useState({}); // dept => bool
 
-  // load saved contacts from localStorage (placeholder account storage)
   useEffect(() => {
     try {
       const raw = localStorage.getItem('nova_saved_contacts');
@@ -84,7 +86,6 @@ export default function IndexPage() {
     }
   }, []);
 
-  // persist savedSet when changed
   useEffect(() => {
     try {
       localStorage.setItem('nova_saved_contacts', JSON.stringify(Array.from(savedSet)));
@@ -121,16 +122,15 @@ export default function IndexPage() {
     }
   }
 
-  // Grouping logic
+  // grouping logic
   const groups = useMemo(() => {
     if (!payload?.emails) return { total: payload?.total || 0, executives: [], departments: {} };
     const emails = payload.emails.map((e, i) => ({ ...e, __idx: i }));
     const executives = [];
     const deptMap = {};
     for (const e of emails) {
-      if (isExecutive(e.position)) {
-        executives.push(e);
-      } else {
+      if (isExecutive(e.position)) executives.push(e);
+      else {
         const dept = detectDepartment(e);
         if (!deptMap[dept]) deptMap[dept] = [];
         deptMap[dept].push(e);
@@ -151,24 +151,18 @@ export default function IndexPage() {
     return { total: payload.total || emails.length, executives, departments: sortedDeptMap };
   }, [payload]);
 
-  // initial preview limit: 5 for not-signed-in (per request)
-  const initialDisplayLimit = 5;
-  const shownTotal = payload ? Math.min(initialDisplayLimit, (groups.total || 0)) : 0;
-
-  // Build grouped initial preview: executives first then fill from departments
+  // initial preview limit (5 for not-signed-in)
+  const initialLimit = 5;
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
-    let remaining = initialDisplayLimit;
+    let remaining = initialLimit;
     const grouped = {};
-    // executives
     for (const e of groups.executives || []) {
       if (remaining <= 0) break;
-      const g = 'Executives';
-      grouped[g] = grouped[g] || [];
-      grouped[g].push(e);
+      grouped['Executives'] = grouped['Executives'] || [];
+      grouped['Executives'].push(e);
       remaining--;
     }
-    // departments in alphabetical order
     for (const [dept, items] of Object.entries(groups.departments || {})) {
       if (remaining <= 0) break;
       for (const e of items) {
@@ -179,63 +173,64 @@ export default function IndexPage() {
       }
       if (remaining <= 0) break;
     }
-    return grouped; // {deptName: [items]}
+    return grouped;
   }, [groups, payload]);
 
   function toggleReveal(email) {
-    // if not revealed -> reveal; if revealed and not saved -> keep revealed and allow Save
     setRevealed((prev) => ({ ...prev, [email]: true }));
   }
 
-  function handleSave(email, item) {
-    // save to placeholder storage (localStorage) and update savedSet
+  function handleSave(email) {
     setSavedSet((s) => {
       const next = new Set(s);
       next.add(email);
       return next;
     });
-    // Optionally send to server in future
   }
 
   function toggleDept(dep) {
     setExpandedDeps((s) => ({ ...s, [dep]: !s[dep] }));
   }
 
-  // helper to render a single email card
-  function EmailCard({ e, compact = false }) {
+  function EmailCard({ e }) {
     const email = e.value;
     const isRevealed = !!revealed[email];
     const isSaved = savedSet.has(email);
     return (
       <li className="email-card">
         <div className="email-row">
-          <div className="email-address">
-            {isRevealed ? email : maskEmail(email)}
-            {e.confidence != null && <span className="trust"> {e.confidence}%</span>}
+          <div className="email-col">
+            <div className="email-address">
+              {isRevealed ? email : maskEmail(email)}
+              {e.confidence != null && <span className="trust">{e.confidence}%</span>}
+            </div>
+            <div className="meta">
+              <div className="name-position">
+                <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
+                {e.position ? <span className="position"> — {e.position}</span> : null}
+              </div>
+              {/* only show department when it's not "Other" */}
+              {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
+            </div>
           </div>
+
           <div className="email-actions">
             {!isRevealed ? (
-              <button className="reveal-btn" onClick={() => toggleReveal(email)} type="button">Reveal</button>
+              <button className="cta-button ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
             ) : !isSaved ? (
-              <button className="save-btn" onClick={() => handleSave(email, e)} type="button">Save</button>
+              <button className="cta-button primary" onClick={() => handleSave(email)} type="button">Save</button>
             ) : (
-              <button className="saved-btn" type="button" disabled>Saved</button>
+              <button className="cta-button saved" type="button" disabled>Saved</button>
             )}
             <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
           </div>
         </div>
-
-        <div className="meta">
-          <div className="name-position">
-            <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
-            {e.position ? <span className="position"> — {e.position}</span> : null}
-          </div>
-          {/* show department only if not 'Other' */}
-          {e.department ? (e.department !== 'Other' && <div className="department">{e.department}</div>) : null}
-        </div>
       </li>
     );
   }
+
+  const displayedCount = Object.values(initialGrouped).flat().length;
+  const totalCount = groups.total || 0;
 
   return (
     <>
@@ -247,7 +242,7 @@ export default function IndexPage() {
       </Head>
 
       <main className="page-root">
-        <h1>NovaHunt.ai</h1>
+        <h1 className="brand">NovaHunt.ai</h1>
         <p className="lead">Find business emails instantly. Enter a company domain and get professional contacts.</p>
 
         <form className="domain-form" onSubmit={runTestDrive}>
@@ -263,81 +258,80 @@ export default function IndexPage() {
             autoComplete="off"
           />
 
-          {/* hint just below the input */}
           <div className="hint muted">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
 
-          {/* move buttons down for better spacing */}
           <div className="actions-row">
-            <button type="submit" className="test-drive" disabled={loading}>
+            <button type="submit" className="cta-button primary" disabled={loading}>
               {loading ? 'Searching…' : 'Take us for a test drive'}
             </button>
 
-            <a className="primary-cta" href="/checkout">Choose Your Plan</a>
+            <a className="cta-button primary" href="/checkout">Choose Your Plan</a>
           </div>
         </form>
 
-        {/* Summary */}
         {payload && (
-          <div className="summary">
-            <div className="summary-left">Showing <strong>{Object.values(initialGrouped).flat().length}</strong> of <strong>{groups.total || 0}</strong></div>
+          <div className="summary centered">
+            <div className="summary-left">Showing <strong>{displayedCount}</strong> of <strong>{totalCount}</strong></div>
             <div className="summary-right"><a className="upgrade" href="/checkout">Upgrade your plan to see all</a></div>
           </div>
         )}
 
         {error && <div className="msg msg-error" role="alert">{error}</div>}
 
-        {/* initial grouped preview with department headings */}
-        {payload && Object.keys(initialGrouped).length > 0 && (
-          <section className="results initial" aria-live="polite">
-            <h2>Quick preview</h2>
-
-            {/* render each dept header above its items */}
-            {Object.entries(initialGrouped).map(([dept, items]) => (
-              <div key={dept} className="initial-group">
-                <div className="dept-heading">{dept} <span className="dept-count">({items.length})</span></div>
-                <ul className="email-list">
-                  {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
-                </ul>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* Expanded groups below */}
-        {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
-          <section className="groups">
-            {groups.executives && groups.executives.length > 0 && (
-              <div className="group">
-                <div className="group-header">
-                  <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">
-                    Executives ({groups.executives.length})
-                  </button>
-                </div>
-                {expandedDeps['Executives'] && (
-                  <ul className="email-list small">
-                    {groups.executives.map((e) => <EmailCard key={`exec-${e.__idx}`} e={e} />)}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {Object.entries(groups.departments).map(([dept, items]) => (
-              <div className="group" key={dept}>
-                <div className="group-header">
-                  <button className="group-toggle" onClick={() => toggleDept(dept)} type="button">
-                    {dept} ({items.length})
-                  </button>
-                </div>
-
-                {expandedDeps[dept] && (
-                  <ul className="email-list small">
+        {/* Centered results area */}
+        <div className="results-wrap">
+          {/* initial grouped preview */}
+          {payload && Object.keys(initialGrouped).length > 0 && (
+            <section className="results initial" aria-live="polite">
+              {Object.entries(initialGrouped).map(([dept, items]) => (
+                <div key={dept} className="initial-group">
+                  <div className="dept-heading">
+                    {dept} <span className="dept-count">({items.length})</span>
+                  </div>
+                  <ul className="email-list">
                     {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
                   </ul>
-                )}
-              </div>
-            ))}
-          </section>
-        )}
+                </div>
+              ))}
+            </section>
+          )}
+
+          {/* Expanded groups below */}
+          {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
+            <section className="groups">
+              {groups.executives && groups.executives.length > 0 && (
+                <div className="group">
+                  <div className="group-header">
+                    <button className="group-toggle" onClick={() => toggleDept('Executives')} type="button">
+                      Executives ({groups.executives.length})
+                    </button>
+                  </div>
+                  {expandedDeps['Executives'] && (
+                    <ul className="email-list small">
+                      {groups.executives.map((e) => <EmailCard key={`exec-${e.__idx}`} e={e} />)}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {Object.entries(groups.departments).map(([dept, items]) => (
+                <div className="group" key={dept}>
+                  <div className="group-header">
+                    <button className="group-toggle" onClick={() => toggleDept(dept)} type="button">
+                      {dept} ({items.length})
+                    </button>
+                  </div>
+
+                  {expandedDeps[dept] && (
+                    <ul className="email-list small">
+                      {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
+        </div>
       </main>
 
       <style jsx>{`
@@ -345,49 +339,63 @@ export default function IndexPage() {
         html, body, #__next { height: 100%; }
         body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-        .page-root {
-          display:flex;
-          flex-direction:column;
-          align-items:center;
-          justify-content:flex-start;
-          min-height:100vh;
-          padding:48px 20px;
-          text-align:center;
-          max-width: 100%;
-        }
+        .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
 
-        /* widen container but keep mobile friendly */
-        .lead { font-size:28px; color:#4b5563; max-width:920px; margin: 0 0 18px; }
+        /* Brand */
+        .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; }
+        .lead { font-size:28px; color:#4b5563; max-width:920px; margin:0 0 18px; }
 
-        .domain-form { width:100%; max-width:920px; display:flex; flex-direction:column; align-items:center; }
-        input[type="text"] { width:100%; max-width:760px; padding:18px; font-size:20px; border:2px solid #d1d5db; border-radius:16px; margin-bottom:8px; outline:none; }
-        input[type="text"]:focus { box-shadow:0 0 0 6px rgba(0,102,255,0.06); border-color:#0066ff; }
+        /* Form area */
+        .domain-form { width:100%; max-width:980px; display:flex; flex-direction:column; align-items:center; }
+        input[type="text"] { width:100%; max-width:820px; padding:18px; font-size:20px; border:2px solid #d1d5db; border-radius:18px; margin-bottom:8px; outline:none; }
+        input[type="text"]:focus { box-shadow:0 8px 30px rgba(0,102,255,0.08); border-color:#0066ff; }
 
-        .hint { margin:8px 0 14px; color:#6b7280; font-size:14px; max-width:760px; text-align:left; }
+        .hint { margin:8px 0 14px; color:#6b7280; font-size:14px; max-width:820px; text-align:left; }
 
         .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:12px; }
-        .test-drive { background:#fff; color:#0066ff; border:2px solid #0066ff; font-size:18px; padding:12px 22px; border-radius:12px; cursor:pointer; font-weight:700; }
-        .test-drive[disabled] { opacity:0.7; cursor:default; }
 
-        .primary-cta { display:inline-block; background:#0066ff; color:white; font-weight:700; padding:14px 26px; border-radius:14px; text-decoration:none; font-size:18px; }
+        /* Primary CTA shared style (buttons & plan link) */
+        .cta-button {
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          gap:8px;
+          border-radius:14px;
+          padding:14px 28px;
+          font-weight:800;
+          font-size:18px;
+          text-decoration:none;
+          cursor:pointer;
+          border: none;
+          transition: transform .06s ease, box-shadow .12s ease;
+        }
+        .cta-button.primary {
+          background: linear-gradient(180deg, #007bff, #0066ff);
+          color: #fff;
+          box-shadow: 0 18px 40px rgba(0,102,255,0.22), 0 6px 18px rgba(0,102,255,0.12);
+        }
+        .cta-button.primary:hover { transform: translateY(-2px); box-shadow: 0 26px 60px rgba(0,102,255,0.26), 0 8px 26px rgba(0,102,255,0.14); }
+        .cta-button.ghost { background: #fff; color: #0066ff; border: 2px solid #e6f0ff; box-shadow: none; }
+        .cta-button.saved { background:#10b981; color:#fff; box-shadow: 0 12px 30px rgba(16,185,129,0.18); }
 
-        .summary { display:flex; justify-content:space-between; gap:20px; align-items:center; margin-top:18px; width:100%; max-width:920px; }
+        /* Summary */
+        .summary.centered { display:flex; flex-direction:row; justify-content:space-between; gap:20px; align-items:center; margin-top:20px; width:100%; max-width:920px; }
         .summary-left { color:#374151; font-size:15px; }
-        .summary-right { text-align:right; }
-        .upgrade { color:#d97706; font-weight:700; text-decoration:underline; }
+        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0)); }
 
         .msg { max-width:920px; margin-top:16px; padding:12px 16px; border-radius:10px; }
         .msg-error { background:#fff1f2; color:#9b1c1c; border:1px solid #ffd6d9; }
 
-        .results { width:100%; max-width:920px; margin-top:18px; text-align:left; }
-        .results h2 { font-size:18px; margin:8px 0 12px; }
+        /* Results wrapper centered and wider */
+        .results-wrap { width:100%; max-width:920px; margin-top:20px; display:flex; flex-direction:column; align-items:center; }
 
-        /* initial grouped preview styling */
-        .initial-group { margin-bottom:14px; }
-        .dept-heading { font-weight:800; font-size:16px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+        .results h2 { font-size:18px; margin:8px 0 12px; width:100%; }
+
+        /* Department heading */
+        .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
         .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
 
-        .groups { width:100%; max-width:920px; margin-top:20px; text-align:left; }
+        .groups { width:100%; margin-top:18px; }
 
         .group { margin-bottom:12px; }
         .group-header { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
@@ -402,44 +410,46 @@ export default function IndexPage() {
           font-size:15px;
         }
 
-        .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:12px; }
+        .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:16px; width:100%; }
         .email-list.small { margin-top:8px; }
-        .email-card { background:white; border-radius:12px; padding:12px 14px; box-shadow:0 8px 20px rgba(15,23,42,0.04); }
-        .email-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-        .email-address { font-weight:700; color:#0f172a; font-size:16px; word-break:break-all; display:flex; align-items:center; gap:8px; }
-        .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:700; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        .email-actions { display:flex; gap:8px; align-items:center; }
-        .reveal-btn, .save-btn, .saved-btn { background:transparent; border:1px solid #e5e7eb; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:700; }
-        .save-btn { background:#0066ff; color:white; border-color:#0066ff; }
-        .saved-btn { background:#10b981; color:white; border-color:#10b981; opacity:0.9; }
+        .email-card { background:white; border-radius:14px; padding:14px 18px; box-shadow:0 14px 34px rgba(15,23,42,0.06); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+        .email-row { display:flex; align-items:flex-start; gap:12px; width:100%; justify-content:space-between; }
 
-        .source-link { color:#0066ff; text-decoration:underline; font-size:13px; }
+        .email-col { flex:1 1 70%; min-width: 0; }
+        .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; display:flex; align-items:center; gap:8px; }
+        .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        .meta { margin-top:8px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:4px; }
+        .email-actions { display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
+        .source-link { color:#fff; background:transparent; color:#0066ff; text-decoration:underline; font-size:13px; }
+
+        .meta { margin-top:10px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; }
         .name { color:#111827; font-weight:700; }
-        .position { color:#374151; font-weight:500; }
+        .position { color:#374151; font-weight:600; }
         .department { color:#6b7280; font-size:13px; }
 
+        /* Mobile adjustments */
         @media (max-width: 920px) {
-          .domain-form { max-width: 92%; }
-          .lead { max-width: 92%; font-size:22px; }
-          .summary { flex-direction:column; align-items:center; gap:8px; }
+          .domain-form { max-width: 96%; }
+          .lead { max-width: 96%; font-size:22px; }
+          .summary.centered { flex-direction:column; align-items:center; gap:8px; }
+          .email-card { padding:12px; }
         }
 
         @media (max-width:768px) {
-          .page-root { padding:32px 16px; }
-          h1 { font-size:48px; }
+          .page-root { padding:34px 16px; }
+          .brand { font-size:48px; }
           .lead { font-size:20px; margin-bottom:12px; }
           input[type="text"] { font-size:18px; padding:14px; }
-          .test-drive, .primary-cta { font-size:16px; padding:10px 18px; }
+          .cta-button { padding:12px 18px; font-size:16px; }
+          .email-row { flex-direction:column; align-items:flex-start; gap:10px; }
+          .email-actions { align-self:flex-end; }
         }
 
         @media (max-width:420px) {
           .actions-row { flex-direction:column; gap:12px; }
-          .primary-cta { width:100%; text-align:center; }
-          .email-row { flex-direction:column; align-items:flex-start; gap:8px; }
-          .email-actions { align-self:flex-end; }
+          .email-card { flex-direction:column; align-items:flex-start; }
+          .email-actions { width:100%; display:flex; justify-content:space-between; gap:10px; margin-top:8px; }
         }
       `}</style>
     </>
