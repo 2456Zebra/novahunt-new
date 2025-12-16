@@ -1,9 +1,7 @@
 import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
-/* Homepage — consistent Inter font, identical CTA styles, mobile friendly */
-
-/* Helpers (mask, exec detection, dept detection, linkedin search) */
+/* Same JS logic as before (omitted for brevity in comments) */
 function maskEmail(email) {
   if (!email) return '';
   const [local, domain] = email.split('@');
@@ -126,7 +124,7 @@ export default function IndexPage() {
     return { total: payload.total || emails.length, executives, departments: sortedDeptMap };
   }, [payload]);
 
-  const initialLimit = 5; // show 5 initially for not-signed-in
+  const initialLimit = 5;
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
     let remaining = initialLimit;
@@ -209,7 +207,8 @@ export default function IndexPage() {
       <Head>
         <title>NovaHunt.ai</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+        {/* Load Inter with the same subsets/weights used in your example */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
       <main className="page-root">
@@ -232,7 +231,6 @@ export default function IndexPage() {
           <div className="hint muted">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
 
           <div className="actions-row">
-            {/* both controls use the same CTA styling and font so they look identical */}
             <button type="submit" className="cta primary" disabled={loading}>
               {loading ? 'Searching…' : 'Take us for a test drive'}
             </button>
@@ -298,98 +296,68 @@ export default function IndexPage() {
       </main>
 
       <style jsx>{`
-        /* global / layout */
         * { box-sizing: border-box; }
         html, body, #__next { height: 100%; }
         body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
         .page-root { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:56px 20px; text-align:center; }
 
-        /* BRAND: restored large size and Inter font */
+        /* BRAND: big and using Inter */
         .brand { font-size:72px; font-weight:800; margin:0 0 8px; line-height:1; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        .lead { font-size:28px; color:#4b5563; max-width:920px; margin:0 0 18px; }
 
-        /* FORM/UI */
-        .domain-form { width:100%; max-width:980px; display:flex; flex-direction:column; align-items:center; }
-        input[type="text"] { width:100%; max-width:820px; padding:18px; font-size:20px; border:2px solid #d1d5db; border-radius:18px; margin-bottom:8px; outline:none; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        input[type="text"]:focus { box-shadow:0 18px 36px rgba(0,102,255,0.09); border-color:#0066ff; }
-
-        .hint { margin:8px 0 14px; color:#6b7280; font-size:14px; max-width:820px; text-align:left; }
-
-        .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:12px; }
-
-        /* single CTA style applied to both button and anchor */
-        .cta {
-          display:inline-flex;
-          align-items:center;
-          justify-content:center;
-          gap:8px;
-          border-radius:14px;
-          padding:14px 32px;
-          font-weight:800;
-          font-size:18px;
-          text-decoration:none;
-          cursor:pointer;
-          border:none;
+        /* Lead paragraph styling tuned to match your reference */
+        .lead {
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
-          line-height:1;
+          font-weight: 500;            /* medium weight like reference */
+          font-size: 28px;             /* as requested */
+          line-height: 1.25;           /* tighter leading like reference */
+          letter-spacing: -0.01em;     /* slight negative tracking to match look */
+          color: #4b5563;
+          max-width: 920px;
+          margin: 0 0 18px;
+        }
+
+        /* Hint (below input) tuned to match reference */
+        .hint {
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          font-weight: 400;
+          font-size: 15px;             /* slightly larger than before for legibility */
+          line-height: 1.4;
+          letter-spacing: 0;
+          color: #6b7280;
+          max-width: 820px;
+          text-align: left;
+          margin: 8px 0 14px;
+        }
+
+        /* CTA consistent font & size */
+        .actions-row { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+        .cta {
+          display:inline-flex; align-items:center; justify-content:center; gap:8px;
+          border-radius:14px; padding:14px 32px; font-weight:800; font-size:18px;
+          text-decoration:none; cursor:pointer; border:none; font-family:'Inter', system-ui, -apple-system, sans-serif; line-height:1;
         }
         .cta.primary {
           background: linear-gradient(180deg, #007bff, #0066ff);
           color: #fff;
           box-shadow: 0 22px 48px rgba(0,102,255,0.24), 0 8px 22px rgba(0,102,255,0.12);
         }
-        .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 30px 72px rgba(0,102,255,0.28), 0 10px 26px rgba(0,102,255,0.14); }
-        .cta.ghost { background: #fff; color:#0066ff; border: 1px solid rgba(0,102,255,0.08); }
-        .cta.saved { background:#10b981; color:#fff; }
 
-        /* Summary & results */
-        .summary.centered { display:flex; flex-direction:row; justify-content:space-between; gap:20px; align-items:center; margin-top:20px; width:100%; max-width:920px; }
-        .summary-left { color:#374151; font-size:15px; }
-        .upgrade { color:#ffd166; font-weight:800; text-decoration:underline; }
-
+        /* Results spacing and widths */
         .results-wrap { width:100%; max-width:920px; margin-top:20px; display:flex; flex-direction:column; align-items:center; }
-
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
-        .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
-
-        .groups { width:100%; margin-top:18px; }
-
-        .group-toggle { background:linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid #e6e8eb; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; color:#0f172a; font-size:15px; }
-
         .email-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:16px; width:100%; }
-        .email-card { background:white; border-radius:14px; padding:14px 18px; box-shadow:0 14px 34px rgba(15,23,42,0.06); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-        .email-row-top { display:flex; gap:12px; width:100%; flex-direction:column; align-items:flex-start; }
-
-        .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; display:flex; align-items:center; gap:8px; }
+        .email-card { background:white; border-radius:14px; padding:16px 20px; box-shadow:0 14px 34px rgba(15,23,42,0.06); display:flex; align-items:flex-start; gap:12px; }
+        .email-address { font-weight:800; color:#0f172a; font-size:16px; }
         .trust { background: rgba(0,102,255,0.08); color:#0049b3; font-weight:800; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
 
-        .email-actions { display:flex; gap:10px; align-items:center; margin-top:12px; }
-        .source { color:#0066ff; text-decoration:underline; font-weight:700; }
-
-        .meta { margin-top:10px; color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; }
-        .name { color:#111827; font-weight:700; }
-        .position { color:#374151; font-weight:600; }
-        .department { color:#6b7280; font-size:13px; }
-
-        /* mobile adjustments */
-        @media (max-width:920px) {
-          .domain-form { max-width:96%; }
-          .lead { max-width:96%; font-size:22px; }
-          .summary.centered { flex-direction:column; align-items:center; gap:8px; }
-        }
+        /* adjust sizes for mobile */
         @media (max-width:768px) {
-          .page-root { padding:34px 16px; }
           .brand { font-size:48px; }
-          .lead { font-size:20px; margin-bottom:12px; }
-          input[type="text"] { font-size:18px; padding:14px; }
+          .lead { font-size:22px; line-height:1.28; }
+          .hint { font-size:14px; }
           .cta { padding:12px 20px; font-size:16px; }
           .email-card { padding:12px; }
-          .email-actions { width:100%; justify-content:space-between; }
-        }
-        @media (max-width:420px) {
-          .actions-row { flex-direction:column; gap:12px; }
-          .email-card { flex-direction:column; align-items:flex-start; }
         }
       `}</style>
     </>
