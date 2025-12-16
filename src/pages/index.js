@@ -2,16 +2,13 @@ import Head from 'next/head';
 import { useState, useMemo, useEffect } from 'react';
 
 /*
-  Updated homepage search UI — Search results refinements requested:
-  - "Showing X of Y" uses Hunter total (payload.total)
-  - Departments list and headings use same visual style (Executives header used for all)
-  - Trust % moved to the right side of the card (separated from email)
-  - Save/Reveal button reduced in size
-  - Save button placed on the left inside card; "source" link placed on the right
-  - "Upgrade your plan to see all" placed inline next to "Showing X of Y"
-  - Initial preview shows 5 results (not signed in)
-  - Department headings aligned and use consistent font/size/style
-  - Wider, centered results area and mobile-friendly layout
+  Homepage search UI — improvements:
+  - "Showing X of Y" uses payload.total (robustly returned by /api/search)
+  - Department summary shows top N departments inline and a "+N more / View all" toggle
+  - Department headings styled same as Executives
+  - Trust % shown to the right, save/reveal smaller and placed left of card content; source link right-aligned
+  - Upgrade link color increased (gold) for visibility
+  - Mobile-friendly, centered layout
 */
 
 function maskEmail(email) {
@@ -39,9 +36,9 @@ function isExecutive(position = '') {
   );
 }
 
-function detectDepartment(emailItem = {}) {
-  if (emailItem.department && emailItem.department.trim()) return emailItem.department.trim();
-  const pos = (emailItem.position || '').toLowerCase();
+function detectDepartment(item = {}) {
+  if (item.department && item.department.trim()) return item.department.trim();
+  const pos = (item.position || '').toLowerCase();
   const depts = ['engineering', 'product', 'marketing', 'sales', 'finance', 'legal', 'operations', 'hr', 'people', 'support', 'customer', 'design', 'research'];
   for (const d of depts) {
     if (pos.includes(d)) return d[0].toUpperCase() + d.slice(1);
@@ -64,9 +61,10 @@ export default function IndexPage() {
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState(null); // { query, total, emails }
   const [error, setError] = useState(null);
-  const [revealed, setRevealed] = useState({}); // email => boolean
-  const [savedSet, setSavedSet] = useState(new Set()); // saved emails (local placeholder)
+  const [revealed, setRevealed] = useState({}); // email => bool
+  const [savedSet, setSavedSet] = useState(new Set());
   const [expandedDeps, setExpandedDeps] = useState({}); // dept => bool
+  const [showAllDepartments, setShowAllDepartments] = useState(false);
 
   useEffect(() => {
     try {
@@ -75,13 +73,13 @@ export default function IndexPage() {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) setSavedSet(new Set(arr));
       }
-    } catch (err) { /* ignore */ }
+    } catch (err) {}
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem('nova_saved_contacts', JSON.stringify(Array.from(savedSet)));
-    } catch (err) { /* ignore */ }
+    } catch (err) {}
   }, [savedSet]);
 
   async function runTestDrive(e) {
@@ -100,10 +98,10 @@ export default function IndexPage() {
       if (!res.ok) {
         setError(json.error || 'Search failed');
       } else {
-        // API returns { query, total, emails }
         setPayload(json);
         setExpandedDeps({});
         setRevealed({});
+        setShowAllDepartments(false);
       }
     } catch (err) {
       console.error('Search error', err);
@@ -113,22 +111,22 @@ export default function IndexPage() {
     }
   }
 
-  // Build groups from payload, preserving Executives first
+  // Build groups: executives first, then departments with counts for the entire payload
   const groups = useMemo(() => {
     if (!payload?.emails) return { total: payload?.total || 0, executives: [], departments: {} };
-    const emails = payload.emails.map((e, i) => ({ ...e, __idx: i }));
+    const emails = payload.emails.map((e, i) => ({ ...e, __idx: i, department: e.department || detectDepartment(e) }));
     const executives = [];
     const deptMap = {};
     for (const e of emails) {
       if (isExecutive(e.position)) {
         executives.push(e);
       } else {
-        const dept = detectDepartment(e);
+        const dept = e.department || detectDepartment(e);
         if (!deptMap[dept]) deptMap[dept] = [];
         deptMap[dept].push(e);
       }
     }
-    // sort items within departments
+    // sort names in each department
     Object.keys(deptMap).forEach((k) => {
       deptMap[k].sort((a, b) => {
         if ((a.position || '') < (b.position || '')) return -1;
@@ -138,14 +136,16 @@ export default function IndexPage() {
         return na.localeCompare(nb);
       });
     });
-    // sort department names alphabetically
+    // alphabetical order for department keys
     const sorted = {};
-    const names = Object.keys(deptMap).sort((a, b) => a.localeCompare(b));
-    for (const n of names) sorted[n] = deptMap[n];
-    return { total: payload.total || emails.length, executives, departments: sorted };
+    Object.keys(deptMap)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((k) => (sorted[k] = deptMap[k]));
+
+    return { total: Number(payload.total || 0), executives, departments: sorted };
   }, [payload]);
 
-  // initial preview limit: 5 for not-signed-in users
+  // initial preview: show 5 items grouped (executives first, then departments)
   const initialLimit = 5;
   const initialGrouped = useMemo(() => {
     if (!payload?.emails) return {};
@@ -173,7 +173,6 @@ export default function IndexPage() {
   function toggleReveal(email) {
     setRevealed((p) => ({ ...p, [email]: true }));
   }
-
   function handleSave(email) {
     setSavedSet((s) => {
       const next = new Set(s);
@@ -181,68 +180,32 @@ export default function IndexPage() {
       return next;
     });
   }
-
   function toggleDept(dep) {
     setExpandedDeps((s) => ({ ...s, [dep]: !s[dep] }));
   }
 
-  // Email card component — smaller save button, trust moved right, source on far-right
-  function EmailCard({ e }) {
-    const email = e.value;
-    const isRevealed = !!revealed[email];
-    const isSaved = savedSet.has(email);
-    return (
-      <li className="email-card">
-        <div className="email-left">
-          <div className="email-address-row">
-            <div className="email-address">{isRevealed ? email : maskEmail(email)}</div>
-          </div>
-
-          <div className="meta-and-actions">
-            <div className="meta">
-              <div className="name-position">
-                <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
-                {e.position ? <span className="position"> — {e.position}</span> : null}
-              </div>
-              {/* do not display 'Other' as a department badge under person's title */}
-              {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
-            </div>
-
-            <div className="left-action">
-              {!isRevealed ? (
-                <button className="btn-save small ghost" onClick={() => toggleReveal(email)} type="button">Reveal</button>
-              ) : !isSaved ? (
-                <button className="btn-save small primary" onClick={() => handleSave(email)} type="button">Save</button>
-              ) : (
-                <button className="btn-save small saved" type="button" disabled>Saved</button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="email-right">
-          {e.confidence != null && <div className="trust-badge">{e.confidence}%</div>}
-          <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
-        </div>
-      </li>
-    );
-  }
-
-  const displayedCount = Object.values(initialGrouped).flat().length;
-  const totalCount = groups.total || 0;
-
-  // Build department summary (show all departments + their counts, Executives first)
+  // Build department summary sorted by count desc; used for top-N inline display
   const departmentSummary = useMemo(() => {
     if (!payload?.emails) return [];
-    const entries = [];
+    const arr = [];
     if (groups.executives && groups.executives.length > 0) {
-      entries.push(['Executives', groups.executives.length]);
+      arr.push(['Executives', groups.executives.length]);
     }
     for (const [dept, items] of Object.entries(groups.departments || {})) {
-      entries.push([dept, items.length]);
+      arr.push([dept, items.length]);
     }
-    return entries;
+    arr.sort((a, b) => b[1] - a[1]); // sort descending by count
+    return arr;
   }, [groups, payload]);
+
+  // top N inline departments
+  const topN = 4;
+  const topDepartments = departmentSummary.slice(0, topN);
+  const extraDepartments = departmentSummary.length > topN ? departmentSummary.length - topN : 0;
+
+  // displayed count and total
+  const displayedCount = Object.values(initialGrouped).flat().length;
+  const totalCount = groups.total || 0;
 
   return (
     <>
@@ -276,11 +239,13 @@ export default function IndexPage() {
               {loading ? 'Searching…' : 'Take us for a test drive'}
             </button>
 
-            <a className="cta primary" href="/checkout" role="button">Choose Your Plan</a>
+            <a className="cta primary" href="/checkout" role="button">
+              Choose Your Plan
+            </a>
           </div>
         </form>
 
-        {/* Summary with upgrade link placed inline left of summary text */}
+        {/* Summary: Showing X of Y + inline upgrade (gold) + top departments inline */}
         {payload && (
           <div className="summary">
             <div className="summary-left">
@@ -288,14 +253,30 @@ export default function IndexPage() {
               <span className="upgrade-inline"> — <a href="/checkout" className="upgrade">Upgrade your plan to see all</a></span>
             </div>
 
-            {/* department summary (Executives + departments) displayed to the right but in same line on wide screens */}
             <div className="dept-summary">
-              {departmentSummary.map(([name, count]) => (
+              {topDepartments.map(([name, count]) => (
                 <div className="dept-pill" key={name}>
-                  <span className="dept-name">{name}</span> <span className="dept-num">({count})</span>
+                  <span className="dept-name">{name}</span>
+                  <span className="dept-num">({count})</span>
                 </div>
               ))}
+
+              {extraDepartments > 0 && (
+                <button className="view-more" onClick={() => setShowAllDepartments((s) => !s)}>
+                  {showAllDepartments ? 'Hide departments' : `+${extraDepartments} more`}
+                </button>
+              )}
             </div>
+          </div>
+        )}
+
+        {showAllDepartments && payload && (
+          <div className="all-departments">
+            {departmentSummary.map(([name, count]) => (
+              <div key={name} className="dept-line">
+                <span className="dept-name">{name}</span> <span className="dept-num">({count})</span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -309,14 +290,47 @@ export default function IndexPage() {
                 <div key={dept} className="initial-group">
                   <div className="dept-heading">{dept} <span className="dept-count">({items.length})</span></div>
                   <ul className="email-list">
-                    {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
+                    {items.map((e) => (
+                      <li key={`${dept}-${e.__idx}`} className="email-card">
+                        <div className="email-left">
+                          <div className="email-address-row">
+                            <div className="email-address">{(revealed[e.value] ? e.value : maskEmail(e.value))}</div>
+                          </div>
+
+                          <div className="meta-and-actions">
+                            <div className="meta">
+                              <div className="name-position">
+                                <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
+                                {e.position ? <span className="position"> — {e.position}</span> : null}
+                              </div>
+                              {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
+                            </div>
+
+                            <div className="left-action">
+                              {!revealed[e.value] ? (
+                                <button className="btn-save small ghost" onClick={() => toggleReveal(e.value)} type="button">Reveal</button>
+                              ) : !savedSet.has(e.value) ? (
+                                <button className="btn-save small primary" onClick={() => handleSave(e.value)} type="button">Save</button>
+                              ) : (
+                                <button className="btn-save small saved" type="button" disabled>Saved</button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="email-right">
+                          {e.confidence != null && <div className="trust-badge">{e.confidence}%</div>}
+                          <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               ))}
             </section>
           )}
 
-          {/* Expanded groups below */}
+          {/* Expanded groups below (collapsible) */}
           {payload && (Object.keys(groups.departments || {}).length > 0 || (groups.executives && groups.executives.length > 0)) && (
             <section className="groups">
               {groups.executives && groups.executives.length > 0 && (
@@ -328,7 +342,40 @@ export default function IndexPage() {
                   </div>
                   {expandedDeps['Executives'] && (
                     <ul className="email-list small">
-                      {groups.executives.map((e) => <EmailCard key={`exec-${e.__idx}`} e={e} />)}
+                      {groups.executives.map((e) => (
+                        <li key={`exec-${e.__idx}`} className="email-card">
+                          <div className="email-left">
+                            <div className="email-address-row">
+                              <div className="email-address">{(revealed[e.value] ? e.value : maskEmail(e.value))}</div>
+                            </div>
+
+                            <div className="meta-and-actions">
+                              <div className="meta">
+                                <div className="name-position">
+                                  <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
+                                  {e.position ? <span className="position"> — {e.position}</span> : null}
+                                </div>
+                                {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
+                              </div>
+
+                              <div className="left-action">
+                                {!revealed[e.value] ? (
+                                  <button className="btn-save small ghost" onClick={() => toggleReveal(e.value)} type="button">Reveal</button>
+                                ) : !savedSet.has(e.value) ? (
+                                  <button className="btn-save small primary" onClick={() => handleSave(e.value)} type="button">Save</button>
+                                ) : (
+                                  <button className="btn-save small saved" type="button" disabled>Saved</button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="email-right">
+                            {e.confidence != null && <div className="trust-badge">{e.confidence}%</div>}
+                            <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
+                          </div>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>
@@ -342,7 +389,40 @@ export default function IndexPage() {
 
                   {expandedDeps[dept] && (
                     <ul className="email-list small">
-                      {items.map((e) => <EmailCard key={`${dept}-${e.__idx}`} e={e} />)}
+                      {items.map((e) => (
+                        <li key={`${dept}-${e.__idx}`} className="email-card">
+                          <div className="email-left">
+                            <div className="email-address-row">
+                              <div className="email-address">{(revealed[e.value] ? e.value : maskEmail(e.value))}</div>
+                            </div>
+
+                            <div className="meta-and-actions">
+                              <div className="meta">
+                                <div className="name-position">
+                                  <span className="name">{[e.first_name, e.last_name].filter(Boolean).join(' ')}</span>
+                                  {e.position ? <span className="position"> — {e.position}</span> : null}
+                                </div>
+                                {e.department && e.department !== 'Other' ? <div className="department">{e.department}</div> : null}
+                              </div>
+
+                              <div className="left-action">
+                                {!revealed[e.value] ? (
+                                  <button className="btn-save small ghost" onClick={() => toggleReveal(e.value)} type="button">Reveal</button>
+                                ) : !savedSet.has(e.value) ? (
+                                  <button className="btn-save small primary" onClick={() => handleSave(e.value)} type="button">Save</button>
+                                ) : (
+                                  <button className="btn-save small saved" type="button" disabled>Saved</button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="email-right">
+                            {e.confidence != null && <div className="trust-badge">{e.confidence}%</div>}
+                            <a className="source-link" href={linkedinSearchUrl(e, payload?.query)} target="_blank" rel="noopener noreferrer">source</a>
+                          </div>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>
@@ -382,17 +462,21 @@ export default function IndexPage() {
 
         .summary { width:100%; max-width:920px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
         .summary-left { color:#374151; font-size:15px; display:flex; align-items:center; gap:8px; }
-        .upgrade-inline .upgrade { color:#ffd166; font-weight:700; text-decoration:underline; margin-left:6px; }
+        /* Upgrade link color now more visible (gold) */
+        .upgrade { color:#ffb020; font-weight:800; text-decoration:underline; margin-left:6px; }
 
-        /* Department summary (pill list) */
         .dept-summary { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
         .dept-pill { background:transparent; padding:6px 8px; border-radius:8px; font-weight:700; color:#0f172a; display:flex; gap:6px; align-items:center; }
         .dept-name { font-weight:800; font-size:15px; }
         .dept-num { color:#6b7280; font-weight:700; font-size:13px; }
 
+        .view-more { background:transparent; border:1px dashed rgba(0,0,0,0.06); padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:700; }
+
+        .all-departments { width:100%; max-width:920px; margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+        .dept-line { font-weight:700; color:#0f172a; padding:6px 8px; border-radius:8px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+
         .results-wrap { width:100%; max-width:920px; margin-top:22px; display:flex; flex-direction:column; align-items:center; }
 
-        /* Department heading uses same style as Executives heading */
         .dept-heading { font-weight:800; font-size:18px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
         .dept-count { color:#6b7280; font-weight:600; font-size:13px; }
 
@@ -412,13 +496,12 @@ export default function IndexPage() {
         .email-address-row { display:flex; justify-content:flex-start; align-items:center; gap:12px; }
         .email-address { font-weight:800; color:#0f172a; font-size:16px; word-break:break-word; }
 
-        .meta-and-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .meta-and-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; }
         .meta { color:#6b7280; font-size:13px; display:flex; flex-direction:column; gap:6px; text-align:left; }
         .name { color:#111827; font-weight:700; }
         .position { color:#374151; font-weight:600; }
         .department { color:#6b7280; font-size:13px; }
 
-        /* Left small save button */
         .left-action { display:flex; align-items:center; gap:8px; }
         .btn-save.small {
           padding:6px 10px;
@@ -432,7 +515,6 @@ export default function IndexPage() {
         .btn-save.small.primary { background:#0066ff; color:#fff; border-color:#0066ff; box-shadow: 0 8px 20px rgba(0,102,255,0.10); }
         .btn-save.small.saved { background:#10b981; color:#fff; border-color:#10b981; }
 
-        /* Right area: trust + source */
         .email-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto; min-width:96px; }
         .trust-badge {
           background: rgba(0,102,255,0.08);
@@ -444,11 +526,9 @@ export default function IndexPage() {
         }
         .source-link { color:#0066ff; text-decoration:underline; font-weight:700; }
 
-        /* Group headers */
         .group-header { margin-bottom:8px; }
         .group-toggle { background:linear-gradient(180deg,#ffffff,#fbfbfb); border:1px solid #e6e8eb; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800; color:#0f172a; font-size:15px; }
 
-        /* Responsive adjustments */
         @media (max-width:920px) {
           .domain-form { max-width:96%; }
           input[type="text"] { max-width:92%; padding:22px 18px; font-size:20px; }
