@@ -1,7 +1,7 @@
 // Next.js API route: /api/search?domain=example.com
 // - Normalizes Hunter responses to always return { query, total, emails }
-// - If HUNTER_API_KEY is not configured returns demo data (safe for preview)
-// - If `?debug=true` is passed and running in Preview, returns the raw Hunter response for troubleshooting
+// - Supports debug mode: /api/search?domain=...&debug=true returns raw Hunter payload
+// - If HUNTER_API_KEY is missing returns a realistic demo payload (total=545) so the UI can render properly
 export default async function handler(req, res) {
   try {
     const domain = (req.query.domain || '').toString().trim();
@@ -16,10 +16,10 @@ export default async function handler(req, res) {
       console.warn('HUNTER_API_KEY not configured — returning demo data for', domain);
       return res.status(200).json({
         query: domain,
-        total: 545, // realistic demo total so UI shows "Showing 5 of 545"
+        total: 545,
         emails: [
           {
-            value: 'jane.doe@' + domain,
+            value: `jane.doe@${domain}`,
             first_name: 'Jane',
             last_name: 'Doe',
             position: 'Head of Growth',
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
             sources: [{ domain, url: `https://${domain}/team/jane-doe` }],
           },
           {
-            value: 'john.smith@' + domain,
+            value: `john.smith@${domain}`,
             first_name: 'John',
             last_name: 'Smith',
             position: 'CEO',
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
             sources: [{ domain, url: `https://${domain}/about` }],
           },
           {
-            value: 'alex.engineer@' + domain,
+            value: `alex.engineer@${domain}`,
             first_name: 'Alex',
             last_name: 'Engineer',
             position: 'Senior Engineer',
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
             sources: [{ domain, url: `https://${domain}/team/alex` }],
           },
           {
-            value: 'sam.sales@' + domain,
+            value: `sam.sales@${domain}`,
             first_name: 'Sam',
             last_name: 'Sales',
             position: 'Account Executive',
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
             sources: [{ domain, url: `https://${domain}/team/sam` }],
           },
           {
-            value: 'pat.hr@' + domain,
+            value: `pat.hr@${domain}`,
             first_name: 'Pat',
             last_name: 'People',
             position: 'HR Manager',
@@ -67,52 +67,57 @@ export default async function handler(req, res) {
       });
     }
 
-    // Call Hunter domain-search v2. Limit to 100 to retrieve representative emails; Hunter returns `total` count separately.
+    // Call Hunter domain-search v2. Request limit to get representative emails; Hunter returns `total` separately.
     const hunterUrl = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${encodeURIComponent(key)}&limit=100`;
 
     const resp = await fetch(hunterUrl, { method: 'GET' });
     const text = await resp.text();
-    let data = null;
+
+    let data;
     try {
       data = JSON.parse(text);
     } catch (err) {
-      // not JSON — return raw text as error
+      // If Hunter returned non-JSON or an error body, return the raw text as an error
+      console.error('Hunter returned non-JSON response', text);
       return res.status(resp.status).json({ error: `Hunter API error: ${text}` });
     }
 
-    // Optionally return raw Hunter payload for debug when requested and allowed
-    if (debug && process.env.NODE_ENV !== 'production') {
+    // If debug requested return raw Hunter response (useful for immediate troubleshooting)
+    if (debug) {
       return res.status(200).json({ debug: true, raw: data });
     }
 
-    // Normalize Hunter's payload structure (hunter v2 commonly returns data.data)
-    const payload = data?.data || data;
+    // Normalize common Hunter payload shapes
+    // Hunter v2 usually returns { data: { emails: [...], total: 545, ... } }
+    const payload = data?.data ?? data;
 
-    // Determine total count from common places
-    const total =
+    // Resolve total from common places
+    const rawTotal =
       payload?.total ??
       payload?.meta?.total ??
       data?.total ??
-      (Array.isArray(payload?.emails) ? payload.emails.length : undefined) ??
-      (Array.isArray(payload?.results) ? payload.results.length : undefined) ??
+      payload?.summary?.total ??
+      payload?.pagination?.total ??
       0;
 
-    // Extract emails array in a normalized shape
-    const rawEmails = payload?.emails || payload?.results || payload?.data?.emails || [];
+    const total = Number(rawTotal || 0);
+
+    // Extract emails: support several possible keys
+    const rawEmails = payload?.emails ?? payload?.results ?? payload?.data?.emails ?? [];
 
     const emails = (Array.isArray(rawEmails) ? rawEmails : []).map((e) => ({
-      value: e.value || e.email || '',
-      first_name: e.first_name || e.firstName || '',
-      last_name: e.last_name || e.lastName || '',
-      position: e.position || e.title || e.job_title || '',
-      department: e.department || e.job_department || '',
-      confidence: e.confidence || e.score || null,
-      sources: e.sources || e.source || [],
+      value: e?.value ?? e?.email ?? '',
+      first_name: e?.first_name ?? e?.firstName ?? '',
+      last_name: e?.last_name ?? e?.lastName ?? '',
+      position: e?.position ?? e?.title ?? e?.job_title ?? '',
+      department: e?.department ?? e?.job_department ?? '',
+      confidence: e?.confidence ?? e?.score ?? null,
+      sources: e?.sources ?? e?.source ?? [],
     }));
 
     return res.status(200).json({
       query: domain,
-      total: Number(total || 0),
+      total,
       emails,
     });
   } catch (err) {
