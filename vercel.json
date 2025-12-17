@@ -1,12 +1,9 @@
 {
   "framework": null,
   "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
+    {"src": "**/*", "use": "@vercel/static"}
   ],
   "rewrites": [
-    { "source": "/checkout", "destination": "/checkout.html" }
+    {"source": "/checkout", "destination": "/checkout.html"}
   ]
 }
