@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Plans - NovaHunt.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; }
+    .page { min-height: 100vh; padding: 56px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+    p.subtitle { font-size: 24px; color: #4b5563; max-width: 800px; margin-bottom: 48px; }
+    .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; max-width: 1200px; width: 100%; }
+    .plan-card { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 14px 40px rgba(2,6,23,.06); display: flex; flex-direction: column; }
+    .plan-name { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .plan-price { font-size: 48px; font-weight: 800; margin: 16px 0; }
+    .plan-price small { font-size: 20px; font-weight: normal; color: #6b7280; }
+    .plan-features { list-style: none; padding: 0; margin: 24px 0; flex-grow: 1; text-align: left; }
+    .plan-features li { margin: 12px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .plan-features li::before { content: "✓"; color: #10b981; font-weight: bold; }
+    .checkout-btn { background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; padding: 16px 32px; font-size: 20px; font-weight: 800; cursor: pointer; margin-top: 24px; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
+    .popular { border: 3px solid #007bff; position: relative; }
+    .popular::after { content: "Most Popular"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #007bff; color: white; padding: 4px 16px; border-radius: 999px; font-size: 14px; font-weight: bold; }
+    @media (max-width: 768px) { h1 { font-size: 36px; } .plan-price { font-size: 36px; } }
+  </style>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <div class="page">
+    <h1>Choose Your Plan</h1>
+    <p class="subtitle">Unlimited team members • Powered by Hunter.io credits • Cancel anytime</p>
+
+    <div class="plans-grid">
+      <!-- Free Plan -->
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0<span small>/month</span></div>
+        <ul class="plan-features">
+          <li>25 searches/month</li>
+          <li>Basic email verification</li>
+          <li>Community support</li>
+        </ul>
+        <button class="checkout-btn" onclick="alert('Free plan coming soon! Sign up for updates.')">Get Started Free</button>
+      </div>
+
+      <!-- Starter Plan -->
+      <div class="plan-card popular">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$49<span small>/month</span></div>
+        <ul class="plan-features">
+          <li>500 searches/month</li>
+          <li>1,000 verifications/month</li>
+          <li>Email support</li>
+          <li>Export results</li>
+        </ul>
+        <button class="checkout-btn" id="checkout-starter">Subscribe Now</button>
+      </div>
+
+      <!-- Growth Plan -->
+      <div class="plan-card">
+        <div class="plan-name">Growth</div>
+        <div class="plan-price">$99<span small>/month</span></div>
+        <ul class="plan-features">
+          <li>2,000 searches/month</li>
+          <li>4,000 verifications/month</li>
+          <li>Priority support</li>
+          <li>API access</li>
+          <li>Team collaboration</li>
+        </ul>
+        <button class="checkout-btn" id="checkout-growth">Subscribe Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const stripe = Stripe('pk_test_YOUR_PUBLISHABLE_KEY'); // ← REPLACE with your Stripe Publishable Key
+
+    document.getElementById('checkout-starter').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: 'price_1YOUR_STARTER_PRICE_ID', quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '?success=1',
+        cancelUrl: window.location.origin + '/checkout?canceled=1',
+      });
+    });
+
+    document.getElementById('checkout-growth').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: 'price_1YOUR_GROWTH_PRICE_ID', quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '?success=1',
+        cancelUrl: window.location.origin + '/checkout?canceled=1',
+      });
+    });
+  </script>
+</body>
+</html>
