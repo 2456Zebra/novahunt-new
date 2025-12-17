@@ -5,20 +5,30 @@ export default function Home() {
     <>
       <Header />
 
-      <main className="pt-20 text-center">
-        <h1 className="text-6xl font-bold mb-8"># NovaHunt.ai</h1>
+      <main className="page-root">
+        <h1 className="brand">NovaHunt.ai</h1>
+        <p className="lead">Find business emails instantly. Enter a company domain and get professional contacts.</p>
         
-        <p className="text-2xl mb-12">
-          Find business emails instantly. Enter a company domain and get professional contacts.
-        </p>
-        
-        <p className="text-xl mb-8">
-          Try a domain like coca-cola.com
-        </p>
-        
-        <p className="text-2xl font-bold">
-          Take us for a test drive
-        </p>
+        <form className="domain-form">
+          <input
+            id="domainInput"
+            name="domain"
+            type="text"
+            inputMode="url"
+            placeholder="Enter domain, e.g. coca-cola.com"
+            aria-label="Company domain"
+            autoComplete="off"
+            className=""
+            defaultValue=""
+          />
+          <div className="hint">Try a domain (e.g. coca-cola.com) to do a quick search.</div>
+          <div className="actions-row">
+            <button type="submit" className="cta primary">Take us for a test drive</button>
+            <a href="/checkout" role="button" className="cta primary">Choose Your Plan</a>
+          </div>
+        </form>
+
+        <div className="results-wrap"></div>
       </main>
     </>
   )
