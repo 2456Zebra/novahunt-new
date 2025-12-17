@@ -1,6 +1,5 @@
 {
   "name": "novahunt-new",
   "version": "0.1.0",
-  "private": true,
-  "description": "NovaHunt.ai - Email Finder"
+  "private": true
 }
