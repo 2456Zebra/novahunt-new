@@ -32,7 +32,6 @@
     @media (max-width: 768px) { h1 { font-size: 36px; } .subtitle { font-size: 20px; } .plan-price { font-size: 36px; } .popular { transform: none; } }
   </style>
 
-  <!-- Stripe JS -->
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -41,7 +40,6 @@
     <p class="subtitle">Powerful email finding for every need. Cancel anytime.</p>
 
     <div class="plans-grid">
-      <!-- Free -->
       <div class="plan-card">
         <div class="plan-name">Free</div>
         <div class="plan-price">$0<small>/month</small></div>
@@ -50,10 +48,9 @@
           <li>3 reveals/month</li>
           <li>Basic verification</li>
         </ul>
-        <button class="cta" onclick="alert('Free plan selected. Sign up on the homepage to start!')">Get Started Free</button>
+        <button class="cta" onclick="alert('Free plan selected. Sign up on homepage!')">Get Started Free</button>
       </div>
 
-      <!-- Starter -->
       <div class="plan-card">
         <div class="plan-name">Starter</div>
         <div class="plan-price">$9.99<small>/month</small></div>
@@ -63,10 +60,9 @@
           <li>Advanced verification</li>
           <li>Email support</li>
         </ul>
-        <button class="cta" id="starter-btn">Choose Starter</button>
+        <button class="cta" id="starter">Choose Starter</button>
       </div>
 
-      <!-- Pro -->
       <div class="plan-card popular">
         <div class="plan-name">Pro</div>
         <div class="plan-price">$39.99<small>/month</small></div>
@@ -77,10 +73,9 @@
           <li>Export to CSV</li>
           <li>Priority support</li>
         </ul>
-        <button class="cta" id="pro-btn">Choose Pro</button>
+        <button class="cta" id="pro">Choose Pro</button>
       </div>
 
-      <!-- Enterprise -->
       <div class="plan-card">
         <div class="plan-name">Enterprise</div>
         <div class="plan-price">$99.99<small>/month</small></div>
@@ -91,7 +86,7 @@
           <li>API access</li>
           <li>Dedicated support</li>
         </ul>
-        <button class="cta" id="enterprise-btn">Choose Enterprise</button>
+        <button class="cta" id="enterprise">Choose Enterprise</button>
       </div>
     </div>
 
@@ -101,37 +96,27 @@
   </div>
 
   <script>
-    // REPLACE THESE VALUES WITH YOUR ACTUAL STRIPE KEYS AND PRICE IDs
-    const stripe = Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'); // Your Publishable Key
+    // === PASTE YOUR 4 VALUES HERE ===
+    const stripe = Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'); // Your full pk_test key
 
-    const STARTER_PRICE_ID = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Starter Price ID
-    const PRO_PRICE_ID = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Pro Price ID
-    const ENTERPRISE_PRICE_ID = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Enterprise Price ID
+    const STARTER = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Your Starter Price ID
+    const PRO = 'price_XXXXXXXXXXXXXXXXXXXXXXXX';     // Your Pro Price ID
+    const ENTERPRISE = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Your Enterprise Price ID
 
-    function checkout(priceId) {
+    function goToStripe(price) {
       stripe.redirectToCheckout({
-        lineItems: [{ price: priceId, quantity: 1 }],
+        lineItems: [{ price: price, quantity: 1 }],
         mode: 'subscription',
         successUrl: window.location.origin + '/success.html',
         cancelUrl: window.location.origin + '/plans.html?canceled=1',
-      }).then(function (result) {
-        if (result.error) {
-          alert(result.error.message);
-        }
+      }).then(result => {
+        if (result.error) alert(result.error.message);
       });
     }
 
-    document.getElementById('starter-btn').addEventListener('click', function () {
-      checkout(STARTER_PRICE_ID);
-    });
-
-    document.getElementById('pro-btn').addEventListener('click', function () {
-      checkout(PRO_PRICE_ID);
-    });
-
-    document.getElementById('enterprise-btn').addEventListener('click', function () {
-      checkout(ENTERPRISE_PRICE_ID);
-    });
+    document.getElementById('starter').onclick = () => goToStripe(STARTER);
+    document.getElementById('pro').onclick = () => goToStripe(PRO);
+    document.getElementById('enterprise').onclick = () => goToStripe(ENTERPRISE);
   </script>
 </body>
 </html>
