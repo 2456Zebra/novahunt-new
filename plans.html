@@ -93,18 +93,20 @@
   </div>
 
   <script>
-    // Redirect user to the Stripe checkout session
+    // Redirect user to Stripe Checkout
     function redirectToStripeCheckout(productId) {
-      const stripe = Stripe('pk_live_yourPublishableKeyHere'); // Replace with your Publishable Key
+      console.log('Redirecting to Stripe for product ID:', productId); // Debugging
+      const stripe = Stripe('pk_live_YourActualPublishableKeyHere'); // Replace with your Publishable Key
 
       stripe.redirectToCheckout({
         lineItems: [{ price: productId, quantity: 1 }],
         mode: 'subscription',
-        successUrl: 'https://yourdomain.com/success', // Update to your success URL
-        cancelUrl: 'https://yourdomain.com/cancel',   // Update to your cancel URL
+        successUrl: 'https://yourdomain.com/success', // Replace with your success URL
+        cancelUrl: 'https://yourdomain.com/cancel',   // Replace with your cancel URL
       }).then((result) => {
         if (result.error) {
-          console.error(result.error.message);
+          // Log and Notify Errors
+          console.error('Stripe Checkout Error:', result.error.message);
           alert('An error occurred: ' + result.error.message);
         }
       });
