@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Setup PIN - NovaHunt.ai</title>
+  <title>Set PIN - NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -20,40 +20,40 @@
     .cta { width: 100%; padding: 16px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
     .message { margin-top: 16px; font-size: 16px; }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
     <h1>Payment Successful! 🎉</h1>
-    <p>Set your PIN to secure your account and start hunting emails.</p>
+    <p>Set your PIN to secure your account and start using NovaHunt.ai.</p>
     <form id="pin-form">
-      <input type="email" placeholder="Your email" id="email" required />
+      <input type="email" placeholder="Your email used for payment" id="email" required />
       <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
-      <button type="submit" class="cta">Set PIN & Continue</button>
+      <button type="submit" class="cta">Set PIN & Go to App</button>
     </form>
     <p class="message" id="message"></p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-PUBLIC-ANON-KEY');
+    const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
 
     document.getElementById('pin-form').onsubmit = async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pin,
-        options: { data: { paid_plan: true } }
       });
 
       if (error) {
         message.textContent = error.message;
         message.style.color = 'red';
       } else {
-        message.textContent = 'PIN set! Check your email to confirm, then return here.';
+        message.textContent = 'PIN set! Check your email to confirm, then go to homepage.';
         message.style.color = 'green';
         setTimeout(() => window.location.href = '/', 3000);
       }
