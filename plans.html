@@ -153,66 +153,73 @@
           <li>Free forever</li>
           <li>Limited features</li>
         </ul>
-        <button class="cta" onclick="redirectFreePlan()">Get Started</button>
+        <button class="cta" onclick="redirectFree()">Get Started</button>
       </div>
 
-      <!-- Example Basic Plan -->
+      <!-- Basic Plan -->
       <div class="plan-card">
         <h2 class="plan-name">Basic Plan</h2>
         <p class="plan-price">$9.99 <small>/ month</small></p>
         <ul class="plan-features">
+          <li>Unlimited Access</li>
           <li>Feature 1</li>
           <li>Feature 2</li>
-          <li>Feature 3</li>
         </ul>
-        <button class="cta" onclick="redirectToStripeCheckout('basic_plan_id')">Subscribe</button>
+        <button class="cta" onclick="redirectToStripeCheckout('price_1234basicPlan')">
+          Subscribe
+        </button>
       </div>
 
-      <!-- Example Pro Plan -->
+      <!-- Pro Plan -->
       <div class="plan-card popular">
         <h2 class="plan-name">Pro Plan</h2>
         <p class="plan-price">$19.99 <small>/ month</small></p>
         <ul class="plan-features">
-          <li>Feature 1</li>
-          <li>Feature 2</li>
-          <li>Feature 3</li>
+          <li>Advanced Features</li>
+          <li>Priority Support</li>
+          <li>Extra Benefits</li>
         </ul>
-        <button class="cta" onclick="redirectToStripeCheckout('pro_plan_id')">Subscribe</button>
+        <button class="cta" onclick="redirectToStripeCheckout('price_5678proPlan')">
+          Subscribe
+        </button>
       </div>
 
-      <!-- Example Enterprise Plan -->
+      <!-- Enterprise Plan -->
       <div class="plan-card">
         <h2 class="plan-name">Enterprise Plan</h2>
         <p class="plan-price">Contact Us</p>
         <ul class="plan-features">
-          <li>Feature 1</li>
-          <li>Feature 2</li>
-          <li>Feature 3</li>
+          <li>Everything in Pro</li>
+          <li>Custom Support</li>
         </ul>
-        <button class="cta" onclick="redirectToStripeCheckout('enterprise_plan_id')">Get Started</button>
+        <button class="cta" onclick="redirectToStripeCheckout('price_910entPlan')">
+          Get Started
+        </button>
       </div>
     </div>
   </div>
 
   <script>
-    // Redirect for Free Plan
-    function redirectFreePlan() {
-      alert("You have activated the Free Plan! Enjoy limited features.");
+    // Free plan
+    function redirectFree() {
+      alert("You activated the Free Plan. Enjoy!");
     }
 
-    // Redirect to Stripe Checkout
+    // Stripe Checkout
     function redirectToStripeCheckout(productId) {
-      const stripe = Stripe('your-publishable-key-here'); // Replace with your Stripe publishable key
+      const stripe = Stripe("your-publishable-key-here");
+
       stripe
         .redirectToCheckout({
-          lineItems: [{ price: productId, quantity: 1 }], // Replace productId with your Stripe price ID
-          mode: 'subscription',
-          successUrl: 'https://yourdomain.com/success', // Replace with your success URL
-          cancelUrl: 'https://yourdomain.com/cancel', // Replace with your cancellation URL
+          lineItems: [{ price: productId, quantity: 1 }],
+          mode: "subscription",
+          successUrl: "https://yourdomain.com/success", // Replace
+          cancelUrl: "https://yourdomain.com/cancel", // Replace
         })
-        .then(function (result) {
+        .then((result) => {
           if (result.error) {
-            alert(result.error.message);
+            console.error("Stripe Error:", result.error.message);
+            alert("An error occurred: " + result.error.message);
           }
         });
     }
