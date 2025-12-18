@@ -48,7 +48,7 @@
           <li>3 reveals/month</li>
           <li>Basic verification</li>
         </ul>
-        <button class="cta" onclick="alert('Free plan selected. Sign up on homepage!')">Get Started Free</button>
+        <button class="cta" onclick="alert('Free plan selected. Sign up on the homepage!')">Get Started Free</button>
       </div>
 
       <div class="plan-card">
@@ -60,7 +60,7 @@
           <li>Advanced verification</li>
           <li>Email support</li>
         </ul>
-        <button class="cta" id="starter">Choose Starter</button>
+        <button class="cta" id="starter-btn">Choose Starter</button>
       </div>
 
       <div class="plan-card popular">
@@ -73,7 +73,7 @@
           <li>Export to CSV</li>
           <li>Priority support</li>
         </ul>
-        <button class="cta" id="pro">Choose Pro</button>
+        <button class="cta" id="pro-btn">Choose Pro</button>
       </div>
 
       <div class="plan-card">
@@ -86,7 +86,7 @@
           <li>API access</li>
           <li>Dedicated support</li>
         </ul>
-        <button class="cta" id="enterprise">Choose Enterprise</button>
+        <button class="cta" id="enterprise-btn">Choose Enterprise</button>
       </div>
     </div>
 
@@ -96,27 +96,29 @@
   </div>
 
   <script>
-    // === PASTE YOUR 4 VALUES HERE ===
-    const stripe = Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'); // Your full pk_test key
+    // REPLACE THESE WITH YOUR ACTUAL VALUES (full, no spaces)
+    const stripe = Stripe('pk_test_51YOURFULLPUBLISHABLEKEYHERE'); // Full pk_test_... key from Stripe Dashboard
 
-    const STARTER = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Your Starter Price ID
-    const PRO = 'price_XXXXXXXXXXXXXXXXXXXXXXXX';     // Your Pro Price ID
-    const ENTERPRISE = 'price_XXXXXXXXXXXXXXXXXXXXXXXX'; // Your Enterprise Price ID
+    const STARTER_PRICE_ID = 'price_1YOURFULLSTARTERPRICEIDHERE';
+    const PRO_PRICE_ID = 'price_1YOURFULLPROPRICEIDHERE';
+    const ENTERPRISE_PRICE_ID = 'price_1YOURFULLENTERPRISEPRICEIDHERE';
 
-    function goToStripe(price) {
+    function checkout(priceId) {
       stripe.redirectToCheckout({
-        lineItems: [{ price: price, quantity: 1 }],
+        lineItems: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         successUrl: window.location.origin + '/success.html',
         cancelUrl: window.location.origin + '/plans.html?canceled=1',
       }).then(result => {
-        if (result.error) alert(result.error.message);
+        if (result.error) {
+          alert(result.error.message);
+        }
       });
     }
 
-    document.getElementById('starter').onclick = () => goToStripe(STARTER);
-    document.getElementById('pro').onclick = () => goToStripe(PRO);
-    document.getElementById('enterprise').onclick = () => goToStripe(ENTERPRISE);
+    document.getElementById('starter-btn').onclick = () => checkout(STARTER_PRICE_ID);
+    document.getElementById('pro-btn').onclick = () => checkout(PRO_PRICE_ID);
+    document.getElementById('enterprise-btn').onclick = () => checkout(ENTERPRISE_PRICE_ID);
   </script>
 </body>
 </html>
