@@ -96,12 +96,13 @@
   </div>
 
   <script>
-    // REPLACE THESE 4 LINES WITH YOUR ACTUAL STRIPE VALUES (full strings, no spaces)
+    // REPLACE WITH YOUR FULL PUBLISHABLE KEY (pk_test_51...)
     const stripe = Stripe('pk_test_51YOURFULLPUBLISHABLEKEYHERE');
 
-    const STARTER_PRICE_ID = 'price_1YOURFULLSTARTERPRICEIDHERE';
-    const PRO_PRICE_ID = 'price_1YOURFULLPROPRICEIDHERE';
-    const ENTERPRISE_PRICE_ID = 'price_1YOURFULLENTERPRISEPRICEIDHERE';
+    // REPLACE WITH YOUR FULL PRICE IDs
+    const STARTER_PRICE_ID = 'price_1YOURFULLSTARTERPRICEID';
+    const PRO_PRICE_ID = 'price_1YOURFULLPROPRICEID';
+    const ENTERPRISE_PRICE_ID = 'price_1YOURFULLENTERPRISEPRICEID';
 
     function checkout(priceId) {
       stripe.redirectToCheckout({
