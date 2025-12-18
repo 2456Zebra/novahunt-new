@@ -99,29 +99,30 @@
   </div>
 
   <script>
-    const stripe = Stripe('pk_test_YOUR_PUBLISHABLE_KEY_HERE'); // Replace with your actual pk_test_... key
+    // === REPLACE THESE TWO LINES WITH YOUR ACTUAL VALUES ===
+    const stripe = Stripe('pk_test_51YOUR_PUBLISHABLE_KEY_HERE'); // Your Stripe Publishable Key (pk_test_...)
+    
+    // Replace these with your actual Price IDs from Stripe
+    const STARTER_PRICE_ID = 'price_1YOUR_STARTER_PRICE_ID';
+    const PRO_PRICE_ID = 'price_1YOUR_PRO_PRICE_ID';
+    const ENTERPRISE_PRICE_ID = 'price_1YOUR_ENTERPRISE_PRICE_ID';
 
-    // Replace these with your actual Price IDs
-    const starterPriceId = 'price_1YOUR_STARTER_PRICE_ID_HERE';
-    const proPriceId = 'price_1YOUR_PRO_PRICE_ID_HERE';
-    const enterprisePriceId = 'price_1YOUR_ENTERPRISE_PRICE_ID_HERE';
-
-    function redirectToCheckout(priceId) {
+    function goToStripe(priceId) {
       stripe.redirectToCheckout({
         lineItems: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         successUrl: window.location.origin + '/success.html',
         cancelUrl: window.location.origin + '/plans.html?canceled=1',
-      }).then((result) => {
+      }).then(function (result) {
         if (result.error) {
           alert(result.error.message);
         }
       });
     }
 
-    document.getElementById('starter-btn').onclick = () => redirectToCheckout(starterPriceId);
-    document.getElementById('pro-btn').onclick = () => redirectToCheckout(proPriceId);
-    document.getElementById('enterprise-btn').onclick = () => redirectToCheckout(enterprisePriceId);
+    document.getElementById('starter-btn').addEventListener('click', () => goToStripe(STARTER_PRICE_ID));
+    document.getElementById('pro-btn').addEventListener('click', () => goToStripe(PRO_PRICE_ID));
+    document.getElementById('enterprise-btn').addEventListener('click', () => goToStripe(ENTERPRISE_PRICE_ID));
   </script>
 </body>
 </html>
