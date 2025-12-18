@@ -96,15 +96,19 @@
   </div>
 
   <script>
-    // REPLACE WITH YOUR FULL PUBLISHABLE KEY (pk_test_51...)
-    const stripe = Stripe('pk_test_51YOURFULLPUBLISHABLEKEYHERE');
+    // REPLACE THESE WITH YOUR FULL VALUES (copy from Stripe Dashboard)
+    const stripe = Stripe('pk_test_51YOURFULLPUBLISHABLEKEYHERE'); // Full pk_test_... key
 
-    // REPLACE WITH YOUR FULL PRICE IDs
     const STARTER_PRICE_ID = 'price_1YOURFULLSTARTERPRICEID';
     const PRO_PRICE_ID = 'price_1YOURFULLPROPRICEID';
     const ENTERPRISE_PRICE_ID = 'price_1YOURFULLENTERPRISEPRICEID';
 
     function checkout(priceId) {
+      if (!priceId || priceId.includes('YOURFULL')) {
+        alert('Error: Missing or invalid Price ID. Check the code.');
+        return;
+      }
+
       stripe.redirectToCheckout({
         lineItems: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
@@ -112,7 +116,7 @@
         cancelUrl: window.location.origin + '/plans.html?canceled=1',
       }).then(result => {
         if (result.error) {
-          alert(result.error.message);
+          alert('Stripe error: ' + result.error.message);
         }
       });
     }
