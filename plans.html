@@ -26,100 +26,70 @@
     .plan-features li::before { content: "✓"; color: #10b981; font-weight: bold; font-size: 20px; }
     .cta { display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; padding: 16px 36px; font-weight: 800; font-size: 18px; text-decoration: none; cursor: pointer; border: none; background: linear-gradient(180deg, #007bff, #06f); color: #fff; box-shadow: 0 32px 80px rgba(0,102,255,.22), 0 10px 30px rgba(0,102,255,.12); margin-top: auto; }
     .popular { border: 4px solid #007bff; position: relative; transform: scale(1.05); }
-    .popular::after { content: "Most Popular"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #007bff; color: white; padding: 6px 20px; border-radius: 999px; font-size: 14px; font-weight: bold; }
-    .back-link { margin-top: 60px; font-size: 16px; }
-    .back-link a { color: #007bff; text-decoration: underline; }
-    @media (max-width: 768px) { h1 { font-size: 36px; } .subtitle { font-size: 20px; } .plan-price { font-size: 36px; } .popular { transform: none; } }
   </style>
 
   <script src="https://js.stripe.com/v3/"></script>
 </head>
+
 <body>
   <div class="page">
-    <h1>Choose Your Plan</h1>
-    <p class="subtitle">Powerful email finding for every need. Cancel anytime.</p>
+    <h1>Plans & Pricing</h1>
+    <p class="subtitle">Choose the perfect plan for your needs</p>
 
     <div class="plans-grid">
+      <!-- Example Basic Plan -->
       <div class="plan-card">
-        <div class="plan-name">Free</div>
-        <div class="plan-price">$0<small>/month</small></div>
+        <h2 class="plan-name">Basic Plan</h2>
+        <p class="plan-price">$9.99 <small>/ month</small></p>
         <ul class="plan-features">
-          <li>5 searches/month</li>
-          <li>3 reveals/month</li>
-          <li>Basic verification</li>
+          <li>Feature 1</li>
+          <li>Feature 2</li>
+          <li>Feature 3</li>
         </ul>
-        <button class="cta" onclick="alert('Free plan selected. Sign up on the homepage!')">Get Started Free</button>
+        <button class="cta" onclick="redirectToStripeCheckout('basic_plan_id')">Subscribe</button>
       </div>
 
-      <div class="plan-card">
-        <div class="plan-name">Starter</div>
-        <div class="plan-price">$9.99<small>/month</small></div>
-        <ul class="plan-features">
-          <li>100 searches/month</li>
-          <li>50 reveals/month</li>
-          <li>Advanced verification</li>
-          <li>Email support</li>
-        </ul>
-        <button class="cta" id="starter-btn">Choose Starter</button>
-      </div>
-
+      <!-- Example Pro Plan -->
       <div class="plan-card popular">
-        <div class="plan-name">Pro</div>
-        <div class="plan-price">$39.99<small>/month</small></div>
+        <h2 class="plan-name">Pro Plan</h2>
+        <p class="plan-price">$19.99 <small>/ month</small></p>
         <ul class="plan-features">
-          <li>500 searches/month</li>
-          <li>250 reveals/month</li>
-          <li>Priority verification</li>
-          <li>Export to CSV</li>
-          <li>Priority support</li>
+          <li>Feature 1</li>
+          <li>Feature 2</li>
+          <li>Feature 3</li>
         </ul>
-        <button class="cta" id="pro-btn">Choose Pro</button>
+        <button class="cta" onclick="redirectToStripeCheckout('pro_plan_id')">Subscribe</button>
       </div>
-
+      
+      <!-- Example Enterprise Plan -->
       <div class="plan-card">
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-price">$99.99<small>/month</small></div>
+        <h2 class="plan-name">Enterprise Plan</h2>
+        <p class="plan-price">Contact Us</p>
         <ul class="plan-features">
-          <li>2,500 searches/month</li>
-          <li>1,500 reveals/month</li>
-          <li>Everything in Pro</li>
-          <li>API access</li>
-          <li>Dedicated support</li>
+          <li>Feature 1</li>
+          <li>Feature 2</li>
+          <li>Feature 3</li>
         </ul>
-        <button class="cta" id="enterprise-btn">Choose Enterprise</button>
+        <button class="cta" onclick="redirectToStripeCheckout('enterprise_plan_id')">Get Started</button>
       </div>
-    </div>
-
-    <div class="back-link">
-      <a href="/">← Back to Home</a>
     </div>
   </div>
 
   <script>
-    // PASTE YOUR FULL PUBLISHABLE KEY HERE (from Stripe Dashboard → Developers → API keys → Test mode)
-    const stripe = Stripe('pk_test_51YOURFULLPUBLISHABLEKEYHERE');
-
-    // PASTE YOUR FULL PRICE IDs HERE (from Stripe → Products → Price → ID)
-    const STARTER_PRICE_ID = 'price_1YOURFULLSTARTERPRICEID';
-    const PRO_PRICE_ID = 'price_1YOURFULLPROPRICEID';
-    const ENTERPRISE_PRICE_ID = 'price_1YOURFULLENTERPRISEPRICEID';
-
-    function checkout(priceId) {
+    // Redirect to Stripe Checkout
+    function redirectToStripeCheckout(productId) {
+      const stripe = Stripe('your-publishable-key-here'); // Replace with your Stripe publishable key
       stripe.redirectToCheckout({
-        lineItems: [{ price: priceId, quantity: 1 }],
+        lineItems: [{ price: productId, quantity: 1 }], // Replace productId with your Stripe price ID
         mode: 'subscription',
-        successUrl: window.location.origin + '/success.html',
-        cancelUrl: window.location.origin + '/plans.html?canceled=1',
-      }).then(result => {
+        successUrl: 'https://yourdomain.com/success', // Replace with your success URL
+        cancelUrl: 'https://yourdomain.com/cancel',   // Replace with your cancellation URL
+      }).then(function (result) {
         if (result.error) {
           alert(result.error.message);
         }
       });
     }
-
-    document.getElementById('starter-btn').onclick = () => checkout(STARTER_PRICE_ID);
-    document.getElementById('pro-btn').onclick = () => checkout(PRO_PRICE_ID);
-    document.getElementById('enterprise-btn').onclick = () => checkout(ENTERPRISE_PRICE_ID);
   </script>
 </body>
 </html>
