@@ -37,6 +37,18 @@
     <p class="subtitle">Choose the perfect plan for your needs</p>
 
     <div class="plans-grid">
+      <!-- Free Plan -->
+      <div class="plan-card">
+        <h2 class="plan-name">Free Plan</h2>
+        <p class="plan-price">$0 <small>/ forever</small></p>
+        <ul class="plan-features">
+          <li>Basic Service</li>
+          <li>Free forever</li>
+          <li>Limited features</li>
+        </ul>
+        <button class="cta" onclick="redirectFreePlan()">Get Started</button>
+      </div>
+
       <!-- Example Basic Plan -->
       <div class="plan-card">
         <h2 class="plan-name">Basic Plan</h2>
@@ -76,6 +88,11 @@
   </div>
 
   <script>
+    // Redirect for Free Plan
+    function redirectFreePlan() {
+      alert("You have activated the Free Plan! Enjoy limited features.");
+    }
+
     // Redirect to Stripe Checkout
     function redirectToStripeCheckout(productId) {
       const stripe = Stripe('your-publishable-key-here'); // Replace with your Stripe publishable key
