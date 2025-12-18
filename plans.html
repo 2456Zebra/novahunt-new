@@ -31,6 +31,7 @@
     .back-link a { color: #007bff; text-decoration: underline; }
     @media (max-width: 768px) { h1 { font-size: 36px; } .subtitle { font-size: 20px; } .plan-price { font-size: 36px; } .popular { transform: none; } }
   </style>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
   <div class="page">
@@ -47,7 +48,7 @@
           <li>3 reveals/month</li>
           <li>Basic verification</li>
         </ul>
-        <a href="/" class="cta">Get Started Free</a>
+        <button class="cta" onclick="alert('Free plan selected. Sign up on the homepage to start!')">Get Started Free</button>
       </div>
 
       <!-- Starter -->
@@ -60,7 +61,7 @@
           <li>Advanced verification</li>
           <li>Email support</li>
         </ul>
-        <a href="#" class="cta">Choose Starter</a>
+        <button class="cta" id="starter-btn">Choose Starter</button>
       </div>
 
       <!-- Pro -->
@@ -74,7 +75,7 @@
           <li>Export to CSV</li>
           <li>Priority support</li>
         </ul>
-        <a href="#" class="cta">Choose Pro</a>
+        <button class="cta" id="pro-btn">Choose Pro</button>
       </div>
 
       <!-- Enterprise -->
@@ -88,7 +89,7 @@
           <li>API access</li>
           <li>Dedicated support</li>
         </ul>
-        <a href="#" class="cta">Choose Enterprise</a>
+        <button class="cta" id="enterprise-btn">Choose Enterprise</button>
       </div>
     </div>
 
@@ -96,5 +97,36 @@
       <a href="/">← Back to Home</a>
     </div>
   </div>
+
+  <script>
+    const stripe = Stripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_YOUR_KEY_IF_NOT_SET');
+
+    document.getElementById('starter-btn').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: import.meta.env.VITE_STRIPE_STARTER_PRICE_ID, quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '/success.html',
+        cancelUrl: window.location.origin + '/plans.html?canceled=1',
+      });
+    });
+
+    document.getElementById('pro-btn').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: import.meta.env.VITE_STRIPE_PRO_PRICE_ID, quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '/success.html',
+        cancelUrl: window.location.origin + '/plans.html?canceled=1',
+      });
+    });
+
+    document.getElementById('enterprise-btn').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: import.meta.env.VITE_STRIPE_ENTERPRISE_PRICE_ID, quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '/success.html',
+        cancelUrl: window.location.origin + '/plans.html?canceled=1',
+      });
+    });
+  </script>
 </body>
 </html>
