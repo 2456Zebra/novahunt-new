@@ -16,7 +16,9 @@
     .container { width: 100%; max-width: 500px; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 14px 40px rgba(2,6,23,.06); text-align: center; }
     h1 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
     p { font-size: 18px; color: #4b5563; margin-bottom: 32px; }
-    input { width: 100%; padding: 16px; margin-bottom: 16px; border: 2px solid #d1d5db; border-radius: 12px; font-size: 16px; }
+    .form-group { position: relative; margin-bottom: 16px; }
+    input { width: 100%; padding: 16px 40px 16px 16px; border: 2px solid #d1d5db; border-radius: 12px; font-size: 16px; }
+    .toggle-visibility { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px; color: #6b7280; }
     .cta { width: 100%; padding: 16px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
     .message { margin-top: 16px; font-size: 16px; }
   </style>
@@ -28,8 +30,13 @@
     <h1>Payment Successful! 🎉</h1>
     <p>Set your PIN to secure your account and unlock your plan.</p>
     <form id="pin-form">
-      <input type="email" placeholder="Email used for payment" id="email" required />
-      <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
+      <div class="form-group">
+        <input type="email" placeholder="Email used for payment" id="email" required />
+      </div>
+      <div class="form-group">
+        <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
+        <span class="toggle-visibility" onclick="togglePin()">👁️</span>
+      </div>
       <button type="submit" class="cta">Set PIN & Start Searching</button>
     </form>
     <p class="message" id="message"></p>
@@ -39,6 +46,30 @@
     // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
     const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
 
+    // 1. Grab email from Stripe Checkout session (if available)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id'); // if you use payment links, sometimes available
+    const prefilledEmail = urlParams.get('prefilled_email'); // if you added prefilled_email to your Stripe links
+
+    if (prefilledEmail) {
+      document.getElementById('email').value = decodeURIComponent(prefilledEmail);
+      document.getElementById('email').readOnly = true;
+    }
+
+    // 2. Eyeball toggle for PIN visibility
+    function togglePin() {
+      const pinInput = document.getElementById('pin');
+      const toggle = document.querySelector('.toggle-visibility');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        toggle.textContent = '🙈';
+      } else {
+        pinInput.type = 'password';
+        toggle.textContent = '👁️';
+      }
+    }
+
+    // 3. Form submission
     document.getElementById('pin-form').onsubmit = async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
@@ -54,8 +85,9 @@
         message.textContent = error.message;
         message.style.color = 'red';
       } else {
-        message.textContent = 'PIN set! Redirecting to app...';
+        message.textContent = 'PIN set successfully! Redirecting...';
         message.style.color = 'green';
+        // Redirect to homepage after success (change '/' to '/account.html' if you have an account page)
         setTimeout(() => window.location.href = '/', 2000);
       }
     };
