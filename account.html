@@ -21,6 +21,7 @@
     .actions { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
     .cta { padding: 16px 36px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; text-decoration: none; display: inline-block; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
     .small-link { font-size: 14px; color: #6b7280; text-decoration: underline; cursor: pointer; }
+    .loading { color: #6b7280; font-style: italic; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -28,23 +29,23 @@
 <body>
   <div class="container">
     <h1>Welcome to Your Account</h1>
-    <div class="info">Email: <span id="user-email">Loading...</span></div>
-    <div class="info">Plan: <span class="plan" id="user-plan">Free</span></div>
+    <div class="info">Email: <span id="user-email" class="loading">Loading...</span></div>
+    <div class="info">Plan: <span class="plan" id="user-plan" class="loading">Loading...</span></div>
     <div class="numbers">
-      Searches remaining: <strong id="searches">5</strong><br>
-      Reveals remaining: <strong id="reveals">3</strong>
+      Searches remaining: <strong id="searches" class="loading">Loading...</strong><br>
+      Reveals remaining: <strong id="reveals" class="loading">Loading...</strong>
     </div>
 
     <div class="actions">
       <a href="/" class="cta">Start Searching</a>
       <div class="small-link" onclick="changePin()">Change PIN</div>
+      <div class="small-link" onclick="cancelPlan()">Cancel Plan</div>
       <div class="small-link" onclick="supabase.auth.signOut().then(() => window.location.href = '/')">Sign Out</div>
     </div>
     <p class="message" id="message"></p>
   </div>
 
   <script>
-    // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
     const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
     async function loadAccount() {
@@ -60,11 +61,19 @@
       // Show email
       document.getElementById('user-email').textContent = user.email || 'Not available';
 
-      // Get plan and credits from user_metadata (will be set by webhook later – default to Free for now)
+      // Get plan and credits from user_metadata
       const metadata = user.user_metadata || {};
       const plan = metadata.plan || 'Free';
-      const searches = metadata.searches_remaining || (plan === 'Free' ? 5 : 100); // default values
-      const reveals = metadata.reveals_remaining || (plan === 'Free' ? 3 : 50);
+      let searches = 5;
+      let reveals = 3;
+
+      if (plan === 'Starter') { searches = 100; reveals = 50; }
+      if (plan === 'Pro') { searches = 500; reveals = 250; }
+      if (plan === 'Enterprise') { searches = 2500; reveals = 1500; }
+
+      // Override with saved values if exist
+      searches = metadata.searches_remaining || searches;
+      reveals = metadata.reveals_remaining || reveals;
 
       document.getElementById('user-plan').textContent = plan;
       document.getElementById('searches').textContent = searches;
@@ -78,6 +87,13 @@
           if (error) alert('Error: ' + error.message);
           else alert('PIN changed successfully!');
         });
+      }
+    }
+
+    function cancelPlan() {
+      if (confirm('Cancel your subscription? You will keep access until the end of the billing period.')) {
+        // Replace with your Stripe customer portal link (from Stripe Dashboard → Billing → Customer portal)
+        window.location.href = 'https://billing.stripe.com/p/login/test_XXXXXXXXXXXXXXXX';
       }
     }
 
