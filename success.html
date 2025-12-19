@@ -48,12 +48,10 @@
   </div>
 
   <script>
-    // Supabase client
-    const { createClient } = supabase;
-    const supabase = createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
     // Eyeball toggle
-    document.getElementById('toggle-pin').addEventListener('click', () => {
+    document.getElementById('toggle-pin').onclick = function() {
       const pinInput = document.getElementById('pin');
       const toggle = document.getElementById('toggle-pin');
       if (pinInput.type === 'password') {
@@ -63,10 +61,10 @@
         pinInput.type = 'password';
         toggle.textContent = '👁️';
       }
-    });
+    };
 
     // Submit button
-    document.getElementById('submit-pin').addEventListener('click', async () => {
+    document.getElementById('submit-pin').onclick = async function() {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
@@ -96,12 +94,24 @@
         message.style.color = 'red';
         progressBar.style.display = 'none';
       } else {
-        message.textContent = 'PIN set! Redirecting to your account...';
-        message.style.color = 'green';
+        // Log in after signUp
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password: pin,
+        });
+
         progressFill.style.width = '100%';
-        setTimeout(() => window.location.href = '/account.html', 2000);
+
+        if (loginError) {
+          message.textContent = 'Account created but login failed: ' + loginError.message;
+          message.style.color = 'red';
+        } else {
+          message.textContent = 'PIN set! Redirecting to your account...';
+          message.style.color = 'green';
+          setTimeout(() => window.location.href = '/account.html', 2000);
+        }
       }
-    });
+    };
   </script>
 </body>
 </html>
