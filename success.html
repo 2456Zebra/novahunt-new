@@ -28,7 +28,7 @@
 <body>
   <div class="container">
     <h1>Payment Successful! 🎉</h1>
-    <p>Set your PIN to secure your account and unlock your plan.</p>
+    <p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
     <div>
       <div class="form-group">
         <input type="email" placeholder="Email used for payment" id="email" required />
@@ -59,7 +59,7 @@
       }
     });
 
-    // Submit button click
+    // Submit button click - no refresh
     document.getElementById('submit-pin').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
