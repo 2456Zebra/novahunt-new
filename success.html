@@ -48,7 +48,9 @@
   </div>
 
   <script>
-    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+    // Supabase client
+    const { createClient } = supabase;
+    const supabase = createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
     // Eyeball toggle
     document.getElementById('toggle-pin').addEventListener('click', () => {
@@ -82,34 +84,21 @@
       progressBar.style.display = 'block';
       progressFill.style.width = '40%';
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password: pin,
       });
 
-      progressFill.style.width = '70%';
+      progressFill.style.width = '80%';
 
-      if (signUpError) {
-        message.textContent = 'Error: ' + signUpError.message;
+      if (error) {
+        message.textContent = 'Error: ' + error.message;
         message.style.color = 'red';
         progressBar.style.display = 'none';
-        return;
-      }
-
-      // Log the user in after signUp
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: pin,
-      });
-
-      progressFill.style.width = '100%';
-
-      if (signInError) {
-        message.textContent = 'Account created but login failed: ' + signInError.message;
-        message.style.color = 'red';
       } else {
         message.textContent = 'PIN set! Redirecting to your account...';
         message.style.color = 'green';
+        progressFill.style.width = '100%';
         setTimeout(() => window.location.href = '/account.html', 2000);
       }
     });
