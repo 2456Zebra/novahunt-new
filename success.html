@@ -29,7 +29,7 @@
   <div class="container">
     <h1>Payment Successful! 🎉</h1>
     <p>Set your PIN to secure your account and unlock your plan.</p>
-    <div id="pin-form">
+    <div>
       <div class="form-group">
         <input type="email" placeholder="Email used for payment" id="email" required />
       </div>
@@ -46,14 +46,6 @@
     // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
     const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
 
-    // Pre-fill email from Stripe
-    const urlParams = new URLSearchParams(window.location.search);
-    const prefilledEmail = urlParams.get('prefilled_email');
-    if (prefilledEmail) {
-      document.getElementById('email').value = prefilledEmail;
-      document.getElementById('email').readOnly = true;
-    }
-
     // Eyeball toggle
     document.getElementById('toggle-pin').addEventListener('click', () => {
       const pinInput = document.getElementById('pin');
@@ -67,14 +59,14 @@
       }
     });
 
-    // Submit button (no form tag - no refresh)
+    // Submit button click
     document.getElementById('submit-pin').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
 
-      if (!email || !pin) {
-        message.textContent = 'Please fill both fields';
+      if (!email || !pin || pin.length < 6) {
+        message.textContent = 'Please enter a valid email and PIN (6+ characters)';
         message.style.color = 'red';
         return;
       }
