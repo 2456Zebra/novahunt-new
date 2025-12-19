@@ -43,8 +43,7 @@
   </div>
 
   <script>
-    // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
-    const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
+    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
     // Eyeball toggle
     document.getElementById('toggle-pin').addEventListener('click', () => {
@@ -59,7 +58,7 @@
       }
     });
 
-    // Submit button - no refresh
+    // Submit button click
     document.getElementById('submit-pin').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
