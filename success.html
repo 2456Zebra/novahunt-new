@@ -18,7 +18,7 @@
     p { font-size: 18px; color: #4b5563; margin-bottom: 32px; }
     .form-group { position: relative; margin-bottom: 16px; }
     input { width: 100%; padding: 16px 40px 16px 16px; border: 2px solid #d1d5db; border-radius: 12px; font-size: 16px; }
-    .toggle-visibility { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px; color: #6b7280; }
+    .toggle-visibility { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px; color: #6b7280; user-select: none; }
     .cta { width: 100%; padding: 16px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
     .message { margin-top: 16px; font-size: 16px; }
   </style>
@@ -35,7 +35,7 @@
       </div>
       <div class="form-group">
         <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
-        <span class="toggle-visibility" onclick="togglePin()">👁️</span>
+        <span class="toggle-visibility" id="toggle-pin">👁️</span>
       </div>
       <button type="submit" class="cta">Set PIN & Start Searching</button>
     </form>
@@ -46,20 +46,18 @@
     // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
     const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
 
-    // 1. Grab email from Stripe Checkout session (if available)
+    // 1. Pre-fill email from Stripe (prefilled_email param)
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id'); // if you use payment links, sometimes available
-    const prefilledEmail = urlParams.get('prefilled_email'); // if you added prefilled_email to your Stripe links
-
+    const prefilledEmail = urlParams.get('prefilled_email');
     if (prefilledEmail) {
       document.getElementById('email').value = decodeURIComponent(prefilledEmail);
       document.getElementById('email').readOnly = true;
     }
 
-    // 2. Eyeball toggle for PIN visibility
-    function togglePin() {
+    // 2. Eyeball toggle
+    document.getElementById('toggle-pin').addEventListener('click', () => {
       const pinInput = document.getElementById('pin');
-      const toggle = document.querySelector('.toggle-visibility');
+      const toggle = document.getElementById('toggle-pin');
       if (pinInput.type === 'password') {
         pinInput.type = 'text';
         toggle.textContent = '🙈';
@@ -67,14 +65,17 @@
         pinInput.type = 'password';
         toggle.textContent = '👁️';
       }
-    }
+    });
 
-    // 3. Form submission
-    document.getElementById('pin-form').onsubmit = async (e) => {
-      e.preventDefault();
+    // 3. Form submission – prevent refresh and handle Supabase signUp
+    document.getElementById('pin-form').addEventListener('submit', async (e) => {
+      e.preventDefault(); // This stops the page refresh
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
+
+      message.textContent = 'Creating account...';
+      message.style.color = '#111827';
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -82,15 +83,15 @@
       });
 
       if (error) {
-        message.textContent = error.message;
+        message.textContent = 'Error: ' + error.message;
         message.style.color = 'red';
       } else {
-        message.textContent = 'PIN set successfully! Redirecting...';
+        message.textContent = 'PIN set! Check your email for confirmation, then redirecting...';
         message.style.color = 'green';
-        // Redirect to homepage after success (change '/' to '/account.html' if you have an account page)
-        setTimeout(() => window.location.href = '/', 2000);
+        // Redirect to homepage after success
+        setTimeout(() => window.location.href = '/', 3000);
       }
-    };
+    });
   </script>
 </body>
 </html>
