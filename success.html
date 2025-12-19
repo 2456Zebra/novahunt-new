@@ -29,7 +29,7 @@
   <div class="container">
     <h1>Payment Successful! 🎉</h1>
     <p>Set your PIN to secure your account and unlock your plan.</p>
-    <form id="pin-form">
+    <div id="pin-form">
       <div class="form-group">
         <input type="email" placeholder="Email used for payment" id="email" required />
       </div>
@@ -37,8 +37,8 @@
         <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
         <span class="toggle-visibility" id="toggle-pin">👁️</span>
       </div>
-      <button type="submit" class="cta">Set PIN & Go to Account</button>
-    </form>
+      <button type="button" class="cta" id="submit-pin">Set PIN & Go to Account</button>
+    </div>
     <p class="message" id="message"></p>
   </div>
 
@@ -46,7 +46,7 @@
     // REPLACE WITH YOUR SUPABASE URL AND ANON KEY
     const supabase = Supabase.createClient('https://YOUR-PROJECT.supabase.co', 'YOUR-ANON-KEY');
 
-    // Pre-fill email from URL param
+    // Pre-fill email from Stripe
     const urlParams = new URLSearchParams(window.location.search);
     const prefilledEmail = urlParams.get('prefilled_email');
     if (prefilledEmail) {
@@ -67,12 +67,17 @@
       }
     });
 
-    // Form submission - create account and redirect to account.html
-    document.getElementById('pin-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    // Submit button (no form tag - no refresh)
+    document.getElementById('submit-pin').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
+
+      if (!email || !pin) {
+        message.textContent = 'Please fill both fields';
+        message.style.color = 'red';
+        return;
+      }
 
       message.textContent = 'Creating your account...';
       message.style.color = '#111827';
@@ -88,7 +93,6 @@
       } else {
         message.textContent = 'PIN set! Redirecting to your account...';
         message.style.color = 'green';
-        // Redirect to account page after success
         setTimeout(() => window.location.href = '/account.html', 2000);
       }
     });
