@@ -21,7 +21,11 @@
     .toggle-visibility { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 24px; color: #6b7280; user-select: none; }
     .cta { width: 100%; padding: 16px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
     .message { margin-top: 16px; font-size: 16px; min-height: 24px; }
+    .progress-bar { width: 100%; background: #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 16px; height: 8px; }
+    .progress-fill { height: 100%; background: #007bff; width: 0%; transition: width 0.3s; }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -38,12 +42,13 @@
       <button type="button" class="cta" id="submit-pin">Set PIN & Go to Account</button>
     </div>
     <p class="message" id="message"></p>
+    <div class="progress-bar" id="progress-bar" style="display:none;">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    const supabase = createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+  <script>
+    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
     // Eyeball toggle
     document.getElementById('toggle-pin').addEventListener('click', () => {
@@ -58,11 +63,13 @@
       }
     });
 
-    // Submit button click
+    // Submit button
     document.getElementById('submit-pin').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const pin = document.getElementById('pin').value;
       const message = document.getElementById('message');
+      const progressBar = document.getElementById('progress-bar');
+      const progressFill = document.getElementById('progress-fill');
 
       if (!email || !pin || pin.length < 6) {
         message.textContent = 'Please enter a valid email and PIN (6+ characters)';
@@ -72,18 +79,24 @@
 
       message.textContent = 'Creating your account...';
       message.style.color = '#111827';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '30%';
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pin,
       });
 
+      progressFill.style.width = '70%';
+
       if (error) {
         message.textContent = 'Error: ' + error.message;
         message.style.color = 'red';
+        progressBar.style.display = 'none';
       } else {
         message.textContent = 'PIN set! Redirecting to your account...';
         message.style.color = 'green';
+        progressFill.style.width = '100%';
         setTimeout(() => window.location.href = '/account.html', 2000);
       }
     });
