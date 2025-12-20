@@ -31,7 +31,7 @@ input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-rad
 
 <div class="form-group">
 <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
-<span class="toggle-visibility" id="eye">Show</span>
+<span class="toggle-visibility" id="eye">👁️</span>
 </div>
 
 <button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
@@ -47,10 +47,10 @@ document.getElementById('eye').onclick = function() {
   const p = document.getElementById('pin');
   if (p.type === 'password') {
     p.type = 'text';
-    this.textContent = 'Hide';
+    this.textContent = '🙈';
   } else {
     p.type = 'password';
-    this.textContent = 'Show';
+    this.textContent = '👁️';
   }
 };
 
@@ -83,7 +83,7 @@ document.getElementById('submit').onclick = async function() {
     return;
   }
 
-  // Auto login
+  // Auto login to create active session token
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email, password: pin});
 
   fill.style.width = '100%';
