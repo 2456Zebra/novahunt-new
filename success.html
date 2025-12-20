@@ -82,7 +82,7 @@
         return;
       }
 
-      // Auto login after signUp
+      // Auto login after signUp to create session token
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password: pin,
