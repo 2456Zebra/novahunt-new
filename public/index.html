@@ -14,6 +14,18 @@
     html, body { height: 100%; margin: 0; }
     body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; }
 
+    /* SIGN IN / ACCOUNT LINK */
+    #authLink {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
     .page-root { display: flex; flex-direction: column; align-items: center; padding: 56px 20px; text-align: center; }
 
     .brand { font-size: 72px; font-weight: 800; margin: 0 0 8px; }
@@ -37,11 +49,26 @@
     .secondary-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #f9fafb; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 8px; }
 
     h3 { margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 700; }
+
+    #loadMoreBtn {
+      display: none;
+      margin: 20px auto;
+      padding: 12px 24px;
+      border-radius: 12px;
+      background: #e5e7eb;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+  <!-- SIGN IN / ACCOUNT LINK -->
+  <a id="authLink" href="/login.html">Sign In</a>
+
   <main class="page-root">
     <h1 class="brand">NovaHunt.ai</h1>
     <p class="lead">Find business emails instantly. Enter a company domain and get professional contacts.</p>
@@ -59,6 +86,8 @@
     <div id="creditsBanner" style="margin-top:16px; font-size:14px; color:#4b5563; display:none;"></div>
     <div id="statusMsg" style="margin-top:16px; font-size:14px; color:#6b7280;"></div>
     <div class="results-wrap" id="results"></div>
+
+    <button id="loadMoreBtn">Load More</button>
   </main>
 
   <script>
@@ -70,11 +99,19 @@
     let currentUser = null;
     let currentMeta = null;
 
+    let offset = 0;
+    let totalResults = 0;
+    let currentDomain = '';
+
     async function refreshUser() {
       const { data } = await client.auth.getUser();
+      const authLink = document.getElementById('authLink');
+
       if (!data.user) {
         currentUser = null;
         currentMeta = null;
+        authLink.textContent = 'Sign In';
+        authLink.href = '/login.html';
         document.getElementById('plansButton').style.display = 'inline-flex';
         document.getElementById('accountButton').style.display = 'none';
         document.getElementById('upgradeButton').style.display = 'none';
@@ -84,6 +121,9 @@
 
       currentUser = data.user;
       currentMeta = currentUser.user_metadata || {};
+
+      authLink.textContent = 'Account';
+      authLink.href = '/account.html';
 
       const plan = currentMeta.plan || 'Free';
       const searches = currentMeta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
@@ -184,6 +224,7 @@
       sourceBtn.textContent = 'Source';
 
       sourceBtn.onclick = () => {
+        if (!currentUser) return alert('Log in to view sources.');
         const q = encodeURIComponent(`${name} ${domain}`);
         window.open(`https://www.google.com/search?q=${q}`, '_blank');
       };
@@ -201,9 +242,8 @@
       container.appendChild(card);
     }
 
-    function renderResults(emails, total, domain) {
+    function renderResults(emails, domain) {
       const container = document.getElementById('results');
-      container.innerHTML = '';
 
       const groups = {};
 
@@ -222,14 +262,37 @@
       });
     }
 
+    async function loadMore() {
+      offset += 10;
+
+      const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}`);
+      const data = await resp.json();
+
+      const emails = data.data?.emails || [];
+      renderResults(emails, currentDomain);
+
+      const shown = document.querySelectorAll('.result-card').length;
+      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
+
+      if (shown >= totalResults) {
+        document.getElementById('loadMoreBtn').style.display = 'none';
+      }
+    }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
+
     document.getElementById('searchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const domain = document.getElementById('domainInput').value.trim();
       const status = document.getElementById('statusMsg');
       const results = document.getElementById('results');
 
+      currentDomain = domain;
+      offset = 0;
+
       status.textContent = 'Searching...';
       results.innerHTML = '';
+      document.getElementById('loadMoreBtn').style.display = 'none';
 
       if (currentUser) {
         if (currentMeta.searches_remaining <= 0) {
@@ -243,11 +306,15 @@
       const data = await resp.json();
 
       const emails = data.data?.emails || [];
-      const total = data.meta?.results || emails.length;
+      totalResults = data.meta?.results || emails.length;
 
-      status.textContent = `Showing ${emails.length} of ${total} contacts`;
+      status.textContent = `Showing ${emails.length} of ${totalResults} contacts`;
 
-      renderResults(emails, total, domain);
+      renderResults(emails, domain);
+
+      if (emails.length < totalResults) {
+        document.getElementById('loadMoreBtn').style.display = 'block';
+      }
     });
 
     refreshUser();
