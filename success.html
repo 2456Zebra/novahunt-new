@@ -5,6 +5,7 @@
 <title>Set Your PIN - NovaHunt.ai</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 body{font-family:Inter,system-ui,sans-serif;background:#f9fafb;color:#111827;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
 .container{width:90%;max-width:500px;background:white;padding:40px;border-radius:24px;box-shadow:0 14px 40px rgba(2,6,23,.06);text-align:center}
@@ -16,15 +17,16 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 .progress-bar{width:100%;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:16px;height:8px;display:none}
 .progress-fill{height:100%;background:#007bff;width:0%;transition:width .5s}
 </style>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 <div class="container">
 <h1>Payment Successful! 🎉</h1>
 <p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
 
 <input type="email" placeholder="Email used for payment" id="email" required>
-
 <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
 
 <button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
@@ -34,8 +36,11 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 </div>
 
 <script>
-const { createClient } = Supabase;
-const supabase = createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+// ✅ Correct Supabase v2 initialization
+const supabase = window.supabase.createClient(
+  'https://zusfblqrhqalgywcdvld.supabase.co',
+  'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
+);
 
 document.getElementById('submit').onclick = async function() {
   const email = document.getElementById('email').value.trim();
@@ -55,19 +60,26 @@ document.getElementById('submit').onclick = async function() {
   prog.style.display = 'block';
   fill.style.width = '40%';
 
-  const { data, error } = await supabase.auth.signUp({email, password: pin});
+  // ✅ Sign up user
+  const { error: signupError } = await supabase.auth.signUp({
+    email,
+    password: pin
+  });
 
   fill.style.width = '70%';
 
-  if (error) {
-    msg.textContent = 'Error: ' + error.message;
+  if (signupError) {
+    msg.textContent = 'Error: ' + signupError.message;
     msg.style.color = 'red';
     prog.style.display = 'none';
     return;
   }
 
-  // Auto login to create active session token
-  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email, password: pin});
+  // ✅ Auto login
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password: pin
+  });
 
   fill.style.width = '100%';
 
@@ -77,9 +89,14 @@ document.getElementById('submit').onclick = async function() {
   } else {
     msg.textContent = 'PIN set! Redirecting to your account...';
     msg.style.color = 'green';
-    window.location.href = '/account.html';
+
+    // ✅ Redirect
+    setTimeout(() => {
+      window.location.href = '/account.html';
+    }, 800);
   }
 };
 </script>
+
 </body>
 </html>
