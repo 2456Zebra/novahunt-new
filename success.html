@@ -1,91 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Set Your PIN - NovaHunt.ai</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-body{font-family:Inter,system-ui,sans-serif;background:#f9fafb;color:#111827;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-.container{width:90%;max-width:500px;background:white;padding:40px;border-radius:24px;box-shadow:0 14px 40px rgba(2,6,23,.06);text-align:center}
-h1{font-size:36px;font-weight:800;margin-bottom:16px}
-p{font-size:18px;color:#4b5563;margin-bottom:32px}
-.form-group{position:relative;margin-bottom:16px}
-input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-radius:12px;font-size:16px}
-.toggle-visibility{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:24px;color:#6b7280}
-.cta{width:100%;padding:16px;font-size:18px;font-weight:800;background:linear-gradient(180deg,#007bff,#06f);color:white;border:none;border-radius:16px;cursor:pointer;box-shadow:0 20px 40px rgba(0,102,255,.2)}
-.message{margin-top:16px;font-size:16px;min-height:24px}
-.progress-bar{width:100%;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:16px;height:8px;display:none}
-.progress-fill{height:100%;background:#007bff;width:0%;transition:width .5s}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8"/>
+  <title>Set Your PIN - NovaHunt.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="true"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; display: flex; align-items: center; justify-content: center; }
+    .container { width: 100%; max-width: 500px; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 14px 40px rgba(2,6,23,.06); text-align: center; }
+    h1 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+    p { font-size: 18px; color: #4b5563; margin-bottom: 32px; }
+    .form-group { position: relative; margin-bottom: 16px; }
+    input { width: 100%; padding: 16px 48px 16px 16px; border: 2px solid #d1d5db; border-radius: 12px; font-size: 16px; }
+    .toggle-visibility { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 24px; color: #111827; user-select: none; }
+    .cta { width: 100%; padding: 16px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
+    .message { margin-top: 16px; font-size: 16px; min-height: 24px; }
+    .progress-bar { width: 100%; background: #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 16px; height: 8px; display: none; }
+    .progress-fill { height: 100%; background: #007bff; width: 0%; transition: width 0.5s; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="container">
-<h1>Payment Successful! 🎉</h1>
-<p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
+  <div class="container">
+    <h1>Payment Successful! 🎉</h1>
+    <p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
+    <div>
+      <div class="form-group">
+        <input type="email" placeholder="Email used for payment" id="email" required />
+      </div>
+      <div class="form-group">
+        <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required />
+        <span class="toggle-visibility" onclick="let p=document.getElementById('pin');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁️':'🙈'">👁️</span>
+      </div>
+      <button type="button" class="cta" onclick="setPin()">Set PIN & Go to Account</button>
+    </div>
+    <p class="message" id="message"></p>
+    <div class="progress-bar" id="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
 
-<div class="form-group">
-<input type="email" placeholder="Email used for payment" id="email" required>
-</div>
+  <script>
+    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
-<div class="form-group">
-<input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
-<span class="toggle-visibility" onclick="let p=document.getElementById('pin');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁️':'🙈'">👁️</span>
-</div>
+    async function setPin() {
+      const email = document.getElementById('email').value.trim();
+      const pin = document.getElementById('pin').value;
+      const message = document.getElementById('message');
+      const progressBar = document.getElementById('progress-bar');
+      const progressFill = document.getElementById('progress-fill');
 
-<button type="button" class="cta" onclick="setPin()">Set PIN & Go to Account</button>
+      if (!email || !pin || pin.length < 6) {
+        message.textContent = 'Please enter a valid email and PIN (6+ characters)';
+        message.style.color = 'red';
+        return;
+      }
 
-<p class="message" id="message"></p>
-<div class="progress-bar" id="progress"><div class="progress-fill" id="fill"></div></div>
-</div>
+      message.textContent = 'Creating your account...';
+      message.style.color = '#111827';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '40%';
 
-<script>
-const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pin,
+      });
 
-async function setPin(){
-const email=document.getElementById('email').value.trim();
-const pin=document.getElementById('pin').value;
-const msg=document.getElementById('message');
-const prog=document.getElementById('progress');
-const fill=document.getElementById('fill');
+      progressFill.style.width = '70%';
 
-if(!email||!pin||pin.length<6){
-msg.textContent='Please enter valid email and PIN (6+ characters)';
-msg.style.color='red';
-return;
-}
+      if (error) {
+        message.textContent = 'Error: ' + error.message;
+        message.style.color = 'red';
+        progressBar.style.display = 'none';
+        return;
+      }
 
-msg.textContent='Creating your account...';
-msg.style.color='#111827';
-prog.style.display='block';
-fill.style.width='40%';
+      // Auto login after signUp
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password: pin,
+      });
 
-const { data, error } = await supabase.auth.signUp({email,password:pin});
+      progressFill.style.width = '100%';
 
-fill.style.width='70%';
-
-if(error){
-msg.textContent='Error: '+error.message;
-msg.style.color='red';
-prog.style.display='none';
-return;
-}
-
-// Auto login after signUp
-const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email,password:pin});
-
-fill.style.width='100%';
-
-if(loginError){
-msg.textContent='Login failed: '+loginError.message;
-msg.style.color='red';
-} else {
-msg.textContent='PIN set! Redirecting...';
-msg.style.color='green';
-setTimeout(()=>window.location.href='/account.html',2000);
-}
-}
-</script>
+      if (loginError) {
+        message.textContent = 'Account created but login failed: ' + loginError.message;
+        message.style.color = 'red';
+      } else {
+        message.textContent = 'PIN set! Redirecting to your account...';
+        message.style.color = 'green';
+        setTimeout(() => window.location.href = '/account.html', 2000);
+      }
+    }
+  </script>
 </body>
 </html>
