@@ -10,9 +10,8 @@ body{font-family:Inter,system-ui,sans-serif;background:#f9fafb;color:#111827;dis
 .container{width:90%;max-width:500px;background:white;padding:40px;border-radius:24px;box-shadow:0 14px 40px rgba(2,6,23,.06);text-align:center}
 h1{font-size:36px;font-weight:800;margin-bottom:16px}
 p{font-size:18px;color:#4b5563;margin-bottom:32px}
-.form-group{position:relative;margin-bottom:16px}
-input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-radius:12px;font-size:16px}
-.toggle-visibility{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:24px;color:#111827}
+.form-group{margin-bottom:16px}
+input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-size:16px}
 .cta{width:100%;padding:16px;font-size:18px;font-weight:800;background:linear-gradient(180deg,#007bff,#06f);color:white;border:none;border-radius:16px;cursor:pointer;box-shadow:0 20px 40px rgba(0,102,255,.2)}
 .message{margin-top:16px;font-size:16px;min-height:24px}
 .progress-bar{width:100%;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:16px;height:8px;display:none}
@@ -31,7 +30,6 @@ input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-rad
 
 <div class="form-group">
 <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
-<span class="toggle-visibility" id="eye">👁️</span>
 </div>
 
 <button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
@@ -42,17 +40,6 @@ input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-rad
 
 <script>
 const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
-
-document.getElementById('eye').onclick = function() {
-  const p = document.getElementById('pin');
-  if (p.type === 'password') {
-    p.type = 'text';
-    this.textContent = '🙈';
-  } else {
-    p.type = 'password';
-    this.textContent = '👁️';
-  }
-};
 
 document.getElementById('submit').onclick = async function() {
   const email = document.getElementById('email').value.trim();
