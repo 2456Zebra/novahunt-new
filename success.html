@@ -36,7 +36,7 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 </div>
 
 <script>
-// ✅ Use a SAFE variable name so no conflicts occur
+// ✅ Correct Supabase v2 initialization
 const client = window.supabase.createClient(
   'https://zusfblqrhqalgywcdvld.supabase.co',
   'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
@@ -60,10 +60,17 @@ document.getElementById('submit').onclick = async function() {
   prog.style.display = 'block';
   fill.style.width = '40%';
 
-  // ✅ Sign up user
+  // ✅ Create user with Starter plan metadata
   const { error: signupError } = await client.auth.signUp({
     email,
-    password: pin
+    password: pin,
+    options: {
+      data: {
+        plan: "Starter",
+        searches_remaining: 100,
+        reveals_remaining: 50
+      }
+    }
   });
 
   fill.style.width = '70%';
