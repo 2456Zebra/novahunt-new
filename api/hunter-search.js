@@ -1,6 +1,7 @@
 export default async function handler(req, res) {
   try {
     const domain = req.method === 'POST' ? req.body.domain : req.query.domain;
+    const offset = req.query.offset || 0;
 
     if (!domain) {
       res.status(400).json({ error: 'Missing domain parameter.' });
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${apiKey}`;
+    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${apiKey}&offset=${encodeURIComponent(offset)}&limit=10`;
 
     const response = await fetch(url);
     const data = await response.json();
