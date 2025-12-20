@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <title>Account - NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="true"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -26,75 +26,81 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <div class="container">
     <h1>Welcome to Your Account</h1>
+
     <div class="info">Email: <span id="user-email" class="loading">Loading...</span></div>
-    <div class="info">Plan: <span class="plan" id="user-plan" class="loading">Loading...</span></div>
+    <div class="info">Plan: <span class="plan" id="user-plan">Loading...</span></div>
+
     <div class="numbers">
-      Searches remaining: <strong id="searches" class="loading">Loading...</strong><br>
-      Reveals remaining: <strong id="reveals" class="loading">Loading...</strong>
+      Searches remaining: <strong id="searches">Loading...</strong><br>
+      Reveals remaining: <strong id="reveals">Loading...</strong>
     </div>
 
     <div class="actions">
       <a href="/" class="cta">Start Searching</a>
       <div class="small-link" onclick="changePin()">Change PIN</div>
       <div class="small-link" onclick="cancelPlan()">Cancel Plan</div>
-      <div class="small-link" onclick="supabase.auth.signOut().then(() => window.location.href = '/')">Sign Out</div>
+      <div class="small-link" onclick="signOut()">Sign Out</div>
     </div>
+
     <p class="message" id="message"></p>
   </div>
 
   <script>
-    const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+    // ✅ Correct Supabase v2 initialization
+    const client = window.supabase.createClient(
+      'https://zusfblqrhqalgywcdvld.supabase.co',
+      'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
+    );
 
     async function loadAccount() {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const { data, error } = await client.auth.getUser();
 
-      if (error || !user) {
-        document.getElementById('message').textContent = 'Not logged in – redirecting to homepage...';
+      if (error || !data.user) {
+        document.getElementById('message').textContent = 'Not logged in – redirecting...';
         document.getElementById('message').style.color = 'red';
-        setTimeout(() => window.location.href = '/', 3000);
+        setTimeout(() => window.location.href = '/', 2000);
         return;
       }
 
-      // Show email
-      document.getElementById('user-email').textContent = user.email || 'Not available';
+      const user = data.user;
 
-      // Get plan and credits from user_metadata
-      const metadata = user.user_metadata || {};
-      const plan = metadata.plan || 'Free';
-      let searches = 5;
-      let reveals = 3;
+      // ✅ Show email
+      document.getElementById('user-email').textContent = user.email;
 
-      if (plan === 'Starter') { searches = 100; reveals = 50; }
-      if (plan === 'Pro') { searches = 500; reveals = 250; }
-      if (plan === 'Enterprise') { searches = 2500; reveals = 1500; }
+      // ✅ Load metadata
+      const meta = user.user_metadata || {};
+      const plan = meta.plan || 'Free';
 
-      // Override with saved values if exist
-      searches = metadata.searches_remaining || searches;
-      reveals = metadata.reveals_remaining || reveals;
+      let searches = meta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
+      let reveals  = meta.reveals_remaining  ?? (plan === 'Starter' ? 50  : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
 
       document.getElementById('user-plan').textContent = plan;
       document.getElementById('searches').textContent = searches;
       document.getElementById('reveals').textContent = reveals;
     }
 
-    function changePin() {
+    async function changePin() {
       const newPin = prompt('Enter new PIN (6+ characters):');
-      if (newPin && newPin.length >= 6) {
-        supabase.auth.updateUser({ password: newPin }).then(({ error }) => {
-          if (error) alert('Error: ' + error.message);
-          else alert('PIN changed successfully!');
-        });
-      }
+      if (!newPin || newPin.length < 6) return;
+
+      const { error } = await client.auth.updateUser({ password: newPin });
+      if (error) alert('Error: ' + error.message);
+      else alert('PIN updated successfully!');
     }
 
     function cancelPlan() {
       if (confirm('Cancel your subscription? You will keep access until the end of the billing period.')) {
-        // Replace with your Stripe customer portal link (from Stripe Dashboard → Billing → Customer portal)
         window.location.href = 'https://billing.stripe.com/p/login/test_XXXXXXXXXXXXXXXX';
       }
+    }
+
+    async function signOut() {
+      await client.auth.signOut();
+      window.location.href = '/';
     }
 
     loadAccount();
