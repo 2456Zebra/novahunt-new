@@ -36,8 +36,8 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 </div>
 
 <script>
-// ✅ Correct Supabase v2 initialization
-const supabase = window.supabase.createClient(
+// ✅ Use a SAFE variable name so no conflicts occur
+const client = window.supabase.createClient(
   'https://zusfblqrhqalgywcdvld.supabase.co',
   'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
 );
@@ -61,7 +61,7 @@ document.getElementById('submit').onclick = async function() {
   fill.style.width = '40%';
 
   // ✅ Sign up user
-  const { error: signupError } = await supabase.auth.signUp({
+  const { error: signupError } = await client.auth.signUp({
     email,
     password: pin
   });
@@ -76,7 +76,7 @@ document.getElementById('submit').onclick = async function() {
   }
 
   // ✅ Auto login
-  const { error: loginError } = await supabase.auth.signInWithPassword({
+  const { error: loginError } = await client.auth.signInWithPassword({
     email,
     password: pin
   });
@@ -90,7 +90,6 @@ document.getElementById('submit').onclick = async function() {
     msg.textContent = 'PIN set! Redirecting to your account...';
     msg.style.color = 'green';
 
-    // ✅ Redirect
     setTimeout(() => {
       window.location.href = '/account.html';
     }, 800);
