@@ -2,106 +2,289 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Account - NovaHunt.ai</title>
+  <title>Account — NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="true"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
   <style>
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; }
-    .container { max-width: 800px; margin: 40px auto; padding: 40px; background: white; border-radius: 24px; box-shadow: 0 14px 40px rgba(2,6,23,.06); text-align: center; }
-    h1 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
-    .info { font-size: 20px; margin: 20px 0; }
-    .plan { font-weight: 800; color: #007bff; }
-    .numbers { font-size: 24px; margin: 30px 0; }
-    .actions { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
-    .cta { padding: 16px 36px; font-size: 18px; font-weight: 800; background: linear-gradient(180deg, #007bff, #06f); color: white; border: none; border-radius: 16px; cursor: pointer; text-decoration: none; display: inline-block; box-shadow: 0 20px 40px rgba(0,102,255,.2); }
-    .small-link { font-size: 14px; color: #6b7280; text-decoration: underline; cursor: pointer; }
-    .loading { color: #6b7280; font-style: italic; }
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: #f9fafb;
+      color: #111827;
+    }
+
+    .top-link {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .page {
+      padding: 56px 20px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .sub {
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 10px 30px rgba(15,23,42,.08);
+      margin-bottom: 24px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .label {
+      font-weight: 600;
+      font-size: 14px;
+      color: #6b7280;
+      margin-right: 8px;
+    }
+
+    .value {
+      font-weight: 700;
+    }
+
+    button.primary {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(180deg, #007bff, #06f);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    td.actions {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .row { flex-direction: column; align-items: flex-start; }
+      table { font-size: 13px; }
+      th, td { padding: 8px 4px; }
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
-  <div class="container">
-    <h1>Welcome to Your Account</h1>
 
-    <div class="info">Email: <span id="user-email" class="loading">Loading...</span></div>
-    <div class="info">Plan: <span class="plan" id="user-plan">Loading...</span></div>
+  <a href="/" class="top-link">New Search</a>
 
-    <div class="numbers">
-      Searches remaining: <strong id="searches">Loading...</strong><br>
-      Reveals remaining: <strong id="reveals">Loading...</strong>
-    </div>
+  <main class="page">
+    <h1>Your Account</h1>
+    <p class="sub">Manage your plan, credits, and saved contacts.</p>
 
-    <div class="actions">
-      <a href="/" class="cta">Start Searching</a>
-      <div class="small-link" onclick="changePin()">Change PIN</div>
-      <div class="small-link" onclick="cancelPlan()">Cancel Plan</div>
-      <div class="small-link" onclick="signOut()">Sign Out</div>
-    </div>
+    <section class="card" id="accountInfo">
+      <div class="row">
+        <div>
+          <span class="label">Email:</span>
+          <span class="value" id="userEmail">—</span>
+        </div>
+        <button class="primary" id="logoutBtn">Log Out</button>
+      </div>
+      <div class="row">
+        <div>
+          <span class="label">Plan:</span>
+          <span class="value" id="planValue">—</span>
+        </div>
+        <a href="/plans.html" class="secondary" id="upgradeBtn">Upgrade Plan</a>
+      </div>
+      <div class="row">
+        <div>
+          <span class="label">Searches remaining:</span>
+          <span class="value" id="searchesValue">—</span>
+        </div>
+        <div>
+          <span class="label">Reveals remaining:</span>
+          <span class="value" id="revealsValue">—</span>
+        </div>
+      </div>
+    </section>
 
-    <p class="message" id="message"></p>
-  </div>
+    <section class="card">
+      <h2 style="margin:0 0 12px; font-size:20px;">Saved Contacts</h2>
+      <p id="savedEmpty" style="font-size:14px; color:#6b7280; margin:0 0 12px;">You haven't saved any contacts yet.</p>
+      <div style="overflow-x:auto;">
+        <table id="savedTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Domain</th>
+              <th>Saved</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="savedBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
   <script>
-    // ✅ Correct Supabase v2 initialization
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
       'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
     );
 
-    async function loadAccount() {
-      const { data, error } = await client.auth.getUser();
+    let currentUser = null;
+    let currentMeta = null;
 
-      if (error || !data.user) {
-        document.getElementById('message').textContent = 'Not logged in – redirecting...';
-        document.getElementById('message').style.color = 'red';
-        setTimeout(() => window.location.href = '/', 2000);
+    async function loadAccount() {
+      const { data } = await client.auth.getUser();
+
+      if (!data.user) {
+        window.location.href = '/login.html';
         return;
       }
 
-      const user = data.user;
+      currentUser = data.user;
+      currentMeta = currentUser.user_metadata || {};
 
-      // ✅ Show email
-      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('userEmail').textContent = currentUser.email || '—';
 
-      // ✅ Load metadata
-      const meta = user.user_metadata || {};
-      const plan = meta.plan || 'Free';
+      const plan = currentMeta.plan || 'Free';
+      const searches = currentMeta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
+      const reveals  = currentMeta.reveals_remaining  ?? (plan === 'Starter' ? 50  : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
 
-      let searches = meta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
-      let reveals  = meta.reveals_remaining  ?? (plan === 'Starter' ? 50  : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
+      currentMeta.plan = plan;
+      currentMeta.searches_remaining = searches;
+      currentMeta.reveals_remaining = reveals;
 
-      document.getElementById('user-plan').textContent = plan;
-      document.getElementById('searches').textContent = searches;
-      document.getElementById('reveals').textContent = reveals;
+      document.getElementById('planValue').textContent = plan;
+      document.getElementById('searchesValue').textContent = searches;
+      document.getElementById('revealsValue').textContent = reveals;
+
+      document.getElementById('upgradeBtn').style.display = plan === 'Enterprise' ? 'none' : 'inline-block';
+
+      renderSavedContacts();
     }
 
-    async function changePin() {
-      const newPin = prompt('Enter new PIN (6+ characters):');
-      if (!newPin || newPin.length < 6) return;
+    function renderSavedContacts() {
+      const saved = currentMeta.saved_contacts || [];
 
-      const { error } = await client.auth.updateUser({ password: newPin });
-      if (error) alert('Error: ' + error.message);
-      else alert('PIN updated successfully!');
-    }
+      const emptyMsg = document.getElementById('savedEmpty');
+      const table = document.getElementById('savedTable');
+      const body = document.getElementById('savedBody');
 
-    function cancelPlan() {
-      if (confirm('Cancel your subscription? You will keep access until the end of the billing period.')) {
-        window.location.href = 'https://billing.stripe.com/p/login/test_XXXXXXXXXXXXXXXX';
+      if (!saved.length) {
+        emptyMsg.style.display = 'block';
+        table.style.display = 'none';
+        body.innerHTML = '';
+        return;
       }
+
+      emptyMsg.style.display = 'none';
+      table.style.display = 'table';
+      body.innerHTML = '';
+
+      saved.forEach((c, idx) => {
+        const tr = document.createElement('tr');
+
+        const nameTd = document.createElement('td');
+        nameTd.textContent = c.name || '—';
+
+        const emailTd = document.createElement('td');
+        emailTd.textContent = c.email || '—';
+
+        const roleTd = document.createElement('td');
+        roleTd.textContent = c.role || '—';
+
+        const domainTd = document.createElement('td');
+        domainTd.textContent = c.domain || '—';
+
+        const savedTd = document.createElement('td');
+        savedTd.textContent = c.saved_at ? new Date(c.saved_at).toLocaleDateString() : '—';
+
+        const actionsTd = document.createElement('td');
+        actionsTd.className = 'actions';
+
+        const sourceBtn = document.createElement('button');
+        sourceBtn.className = 'secondary';
+        sourceBtn.textContent = 'Source';
+        sourceBtn.onclick = () => {
+          const q = encodeURIComponent(`${c.name || ''} ${c.domain || ''}`);
+          window.open(`https://www.google.com/search?q=${q}`, '_blank');
+        };
+
+        actionsTd.appendChild(sourceBtn);
+
+        tr.appendChild(nameTd);
+        tr.appendChild(emailTd);
+        tr.appendChild(roleTd);
+        tr.appendChild(domainTd);
+        tr.appendChild(savedTd);
+        tr.appendChild(actionsTd);
+
+        body.appendChild(tr);
+      });
     }
 
-    async function signOut() {
+    document.getElementById('logoutBtn').onclick = async () => {
       await client.auth.signOut();
       window.location.href = '/';
-    }
+    };
 
     loadAccount();
   </script>
