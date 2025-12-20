@@ -21,36 +21,52 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 </head>
 <body>
 <div class="container">
-<h1>Payment Successful! 🎉</h1>
-<p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
+  <h1>Payment Successful! 🎉</h1>
+  <p>Enter the email you used for payment and set your PIN to unlock your plan.</p>
 
-<div class="form-group">
-<input type="email" placeholder="Email used for payment" id="email" required>
-</div>
+  <div class="form-group">
+    <input type="email" placeholder="Email used for payment" id="email" required>
+  </div>
 
-<div class="form-group">
-<input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
-</div>
+  <div class="form-group">
+    <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
+  </div>
 
-<button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
+  <button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
 
-<p class="message" id="message"></p>
-<div class="progress-bar" id="progress"><div class="progress-fill" id="fill"></div></div>
+  <p class="message" id="message"></p>
+  <div class="progress-bar" id="progress"><div class="progress-fill" id="fill"></div></div>
 </div>
 
 <script>
-const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
+// Check if supabase is already defined
+if (!window.supabase) {
+  console.log('Initializing Supabase client...');
+  window.supabase = Supabase.createClient(
+    'https://zusfblqrhqalgywcdvld.supabase.co',
+    'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
+  );
+} else {
+  console.log('Supabase client already initialized.');
+}
 
+// Attach the onclick event to the submit button
 document.getElementById('submit').onclick = async function() {
+  console.log('Submit button clicked.');
+
   const email = document.getElementById('email').value.trim();
   const pin = document.getElementById('pin').value;
   const msg = document.getElementById('message');
   const prog = document.getElementById('progress');
   const fill = document.getElementById('fill');
 
+  // Sanity check: Log entered email and PIN length
+  console.log('Email:', email, 'PIN length:', pin.length);
+
   if (!email || !pin || pin.length < 6) {
     msg.textContent = 'Please enter valid email and PIN (6+ characters)';
     msg.style.color = 'red';
+    console.log('Validation failed: Invalid email or PIN.');
     return;
   }
 
@@ -59,33 +75,35 @@ document.getElementById('submit').onclick = async function() {
   prog.style.display = 'block';
   fill.style.width = '40%';
 
-  // Sign up the user
-  const { data, error } = await supabase.auth.signUp({ email, password: pin });
+  try {
+    console.log('Attempting to sign up the user...');
+    const { data, error } = await supabase.auth.signUp({ email, password: pin });
+    if (error) throw error;
 
-  fill.style.width = '70%';
+    console.log('Sign-up successful:', data);
 
-  if (error) {
+    fill.style.width = '70%';
+
+    console.log('Attempting automatic login...');
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password: pin });
+    if (loginError) throw loginError;
+
+    console.log('Login successful:', loginData);
+
+    fill.style.width = '100%';
+
+    // Extract token and redirect to account.html with token in query parameter
+    const token = loginData.session.access_token;
+    msg.textContent = 'PIN set! Redirecting to your account...';
+    msg.style.color = 'green';
+    console.log('Redirecting with token:', token);
+
+    location.replace(`/account.html?token=${encodeURIComponent(token)}`);
+  } catch (error) {
     msg.textContent = 'Error: ' + error.message;
     msg.style.color = 'red';
     prog.style.display = 'none';
-    return;
-  }
-
-  // Auto login to get the active token
-  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password: pin });
-
-  fill.style.width = '100%';
-
-  if (loginError) {
-    msg.textContent = 'Login failed: ' + loginError.message;
-    msg.style.color = 'red';
-  } else {
-    msg.textContent = 'PIN set! Redirecting to your account...';
-    msg.style.color = 'green';
-
-    // Redirect with token included in query parameters
-    const token = loginData.session.access_token;
-    location.replace(`/account.html?token=${encodeURIComponent(token)}`);
+    console.error('Error occurred:', error);
   }
 };
 </script>
