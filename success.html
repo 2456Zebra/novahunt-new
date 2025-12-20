@@ -31,10 +31,10 @@ input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-rad
 
 <div class="form-group">
 <input type="password" placeholder="Create PIN (6+ characters)" id="pin" minlength="6" required>
-<span class="toggle-visibility" onclick="let p=document.getElementById('pin');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁️':'🙈'">👁️</span>
+<span class="toggle-visibility" id="eye">👁️</span>
 </div>
 
-<button type="button" class="cta" onclick="setPin()">Set PIN & Go to Account</button>
+<button type="button" class="cta" id="submit">Set PIN & Go to Account</button>
 
 <p class="message" id="message"></p>
 <div class="progress-bar" id="progress"><div class="progress-fill" id="fill"></div></div>
@@ -43,49 +43,60 @@ input{width:100%;padding:16px 48px 16px 16px;border:2px solid #d1d5db;border-rad
 <script>
 const supabase = Supabase.createClient('https://zusfblqrhqalgywcdvld.supabase.co', 'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2');
 
-async function setPin(){
-const email=document.getElementById('email').value.trim();
-const pin=document.getElementById('pin').value;
-const msg=document.getElementById('message');
-const prog=document.getElementById('progress');
-const fill=document.getElementById('fill');
+document.getElementById('eye').onclick = function() {
+  const p = document.getElementById('pin');
+  if (p.type === 'password') {
+    p.type = 'text';
+    this.textContent = '🙈';
+  } else {
+    p.type = 'password';
+    this.textContent = '👁️';
+  }
+};
 
-if(!email||!pin||pin.length<6){
-msg.textContent='Please enter valid email and PIN (6+ characters)';
-msg.style.color='red';
-return;
-}
+document.getElementById('submit').onclick = async function() {
+  const email = document.getElementById('email').value.trim();
+  const pin = document.getElementById('pin').value;
+  const msg = document.getElementById('message');
+  const prog = document.getElementById('progress');
+  const fill = document.getElementById('fill');
 
-msg.textContent='Creating your account...';
-msg.style.color='#111827';
-prog.style.display='block';
-fill.style.width='40%';
+  if (!email || !pin || pin.length < 6) {
+    msg.textContent = 'Please enter valid email and PIN (6+ characters)';
+    msg.style.color = 'red';
+    return;
+  }
 
-const { data, error } = await supabase.auth.signUp({email,password:pin});
+  msg.textContent = 'Creating your account...';
+  msg.style.color = '#111827';
+  prog.style.display = 'block';
+  fill.style.width = '40%';
 
-fill.style.width='70%';
+  const { data, error } = await supabase.auth.signUp({email, password: pin});
 
-if(error){
-msg.textContent='Error: '+error.message;
-msg.style.color='red';
-prog.style.display='none';
-return;
-}
+  fill.style.width = '70%';
 
-// Auto-login to create session token
-const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email,password:pin});
+  if (error) {
+    msg.textContent = 'Error: ' + error.message;
+    msg.style.color = 'red';
+    prog.style.display = 'none';
+    return;
+  }
 
-fill.style.width='100%';
+  // Auto login
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email, password: pin});
 
-if(loginError){
-msg.textContent='Login failed: '+loginError.message;
-msg.style.color='red';
-} else {
-msg.textContent='PIN set! Redirecting to your account...';
-msg.style.color='green';
-setTimeout(()=>window.location.href='/account.html',2000);
-}
-}
+  fill.style.width = '100%';
+
+  if (loginError) {
+    msg.textContent = 'Login failed: ' + loginError.message;
+    msg.style.color = 'red';
+  } else {
+    msg.textContent = 'PIN set! Redirecting to your account...';
+    msg.style.color = 'green';
+    setTimeout(() => window.location.href = '/account.html', 2000);
+  }
+};
 </script>
 </body>
 </html>
