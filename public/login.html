@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Login — NovaHunt.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .box {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      border: 2px solid #d1d5db;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #007bff, #06f);
+      color: white;
+      cursor: pointer;
+    }
+
+    #msg {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="box">
+    <h1>Sign In</h1>
+    <input id="emailInput" type="email" placeholder="Enter your email" required />
+    <button id="loginBtn">Send Magic Link</button>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    const client = window.supabase.createClient(
+      'https://zusfblqrhqalgywcdvld.supabase.co',
+      'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
+    );
+
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('emailInput').value.trim();
+      const msg = document.getElementById('msg');
+
+      if (!email) {
+        msg.textContent = 'Please enter your email.';
+        return;
+      }
+
+      msg.textContent = 'Sending magic link...';
+
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin }
+      });
+
+      if (error) {
+        msg.textContent = 'Error sending link.';
+      } else {
+        msg.textContent = 'Check your email for the login link.';
+      }
+    };
+  </script>
+
+</body>
+</html>
