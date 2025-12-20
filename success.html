@@ -36,11 +36,32 @@ input{width:100%;padding:16px;border:2px solid #d1d5db;border-radius:12px;font-s
 </div>
 
 <script>
-// ✅ Correct Supabase v2 initialization
+// ✅ Supabase v2 client
 const client = window.supabase.createClient(
   'https://zusfblqrhqalgywcdvld.supabase.co',
   'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
 );
+
+// ✅ Read plan from URL
+const urlParams = new URLSearchParams(window.location.search);
+const planParam = (urlParams.get("plan") || "starter").toLowerCase();
+
+// ✅ Determine plan + credits
+let planName = "Starter";
+let searches = 100;
+let reveals = 50;
+
+if (planParam === "pro") {
+  planName = "Pro";
+  searches = 500;
+  reveals = 250;
+}
+
+if (planParam === "enterprise") {
+  planName = "Enterprise";
+  searches = 2500;
+  reveals = 1500;
+}
 
 document.getElementById('submit').onclick = async function() {
   const email = document.getElementById('email').value.trim();
@@ -60,15 +81,15 @@ document.getElementById('submit').onclick = async function() {
   prog.style.display = 'block';
   fill.style.width = '40%';
 
-  // ✅ Create user with Starter plan metadata
+  // ✅ Create user with correct plan metadata
   const { error: signupError } = await client.auth.signUp({
     email,
     password: pin,
     options: {
       data: {
-        plan: "Starter",
-        searches_remaining: 100,
-        reveals_remaining: 50
+        plan: planName,
+        searches_remaining: searches,
+        reveals_remaining: reveals
       }
     }
   });
