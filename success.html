@@ -70,7 +70,7 @@ document.getElementById('submit').onclick = async function() {
     return;
   }
 
-  // Auto login to create active session token
+  // AUTO LOGIN - CREATES ACTIVE TOKEN
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({email, password: pin});
 
   fill.style.width = '100%';
@@ -81,7 +81,7 @@ document.getElementById('submit').onclick = async function() {
   } else {
     msg.textContent = 'PIN set! Redirecting to your account...';
     msg.style.color = 'green';
-    setTimeout(() => window.location.href = '/account.html', 2000);
+    location.replace('/account.html');
   }
 };
 </script>
