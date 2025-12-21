@@ -39,29 +39,48 @@
 
     input {
       width: 100%;
-      padding: 16px;
-      font-size: 18px;
+      padding: 14px;
+      font-size: 16px;
       border: 2px solid #d1d5db;
-      border-radius: 12px;
-      margin-bottom: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
     }
 
     button {
       width: 100%;
-      padding: 16px;
-      font-size: 18px;
+      padding: 14px;
+      font-size: 16px;
       font-weight: 700;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       background: linear-gradient(180deg, #007bff, #06f);
       color: white;
       cursor: pointer;
+      margin-top: 4px;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: default;
     }
 
     #msg {
-      margin-top: 16px;
+      margin-top: 12px;
       font-size: 14px;
       color: #4b5563;
+    }
+
+    .link-row {
+      margin-top: 10px;
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .link-row a {
+      color: #007bff;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
     }
   </style>
 
@@ -71,8 +90,12 @@
 
   <div class="box">
     <h1>Sign In</h1>
-    <input id="emailInput" type="email" placeholder="Enter your email" required />
-    <button id="loginBtn">Send Magic Link</button>
+    <input id="emailInput" type="email" placeholder="Email" autocomplete="email" required />
+    <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" required />
+    <button id="loginBtn">Sign In</button>
+    <div class="link-row">
+      <a id="forgotLink">Forgot password?</a>
+    </div>
     <div id="msg"></div>
   </div>
 
@@ -82,26 +105,56 @@
       'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
     );
 
-    document.getElementById('loginBtn').onclick = async () => {
-      const email = document.getElementById('emailInput').value.trim();
-      const msg = document.getElementById('msg');
+    const emailEl = document.getElementById('emailInput');
+    const passEl = document.getElementById('passwordInput');
+    const msgEl = document.getElementById('msg');
+    const loginBtn = document.getElementById('loginBtn');
+    const forgotLink = document.getElementById('forgotLink');
 
-      if (!email) {
-        msg.textContent = 'Please enter your email.';
+    loginBtn.onclick = async () => {
+      const email = emailEl.value.trim();
+      const password = passEl.value;
+
+      if (!email || !password) {
+        msgEl.textContent = 'Enter both email and password.';
         return;
       }
 
-      msg.textContent = 'Sending magic link...';
+      msgEl.textContent = 'Signing in...';
+      loginBtn.disabled = true;
 
-      const { error } = await client.auth.signInWithOtp({
+      const { data, error } = await client.auth.signInWithPassword({
         email,
-        options: { emailRedirectTo: window.location.origin }
+        password
       });
 
       if (error) {
-        msg.textContent = 'Error sending link.';
+        msgEl.textContent = 'Invalid email or password.';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      msgEl.textContent = 'Signed in. Redirecting...';
+      window.location.href = '/account.html';
+    };
+
+    forgotLink.onclick = async () => {
+      const email = emailEl.value.trim();
+      if (!email) {
+        msgEl.textContent = 'Enter your email first, then click Forgot password.';
+        return;
+      }
+
+      msgEl.textContent = 'Sending reset email...';
+
+      const { error } = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/login.html'
+      });
+
+      if (error) {
+        msgEl.textContent = 'Error sending reset email.';
       } else {
-        msg.textContent = 'Check your email for the login link.';
+        msgEl.textContent = 'Check your email for a reset link.';
       }
     };
   </script>
