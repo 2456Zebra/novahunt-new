@@ -94,6 +94,8 @@
   </main>
 
   <script>
+    const HUNTER_API_KEY = "YOUR_HUNTER_API_KEY_HERE";
+
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
       'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
@@ -193,7 +195,7 @@
       const saveBtn = document.createElement('button');
       saveBtn.className = 'secondary-btn';
       saveBtn.textContent = 'Save Email';
-      saveBtn.disabled = true; // cannot save before reveal
+      saveBtn.disabled = true;
 
       revealBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to reveal emails.');
@@ -203,14 +205,13 @@
         emailEl.textContent = fullEmail;
         revealBtn.disabled = true;
         revealBtn.textContent = 'Revealed';
-        saveBtn.disabled = false; // now saving is allowed
+        saveBtn.disabled = false;
       };
 
       saveBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to save contacts.');
-        if (saveBtn.disabled) return; // extra guard
+        if (saveBtn.disabled) return;
 
-        // refresh latest user metadata before saving
         const { data } = await client.auth.getUser();
         if (data && data.user) {
           currentUser = data.user;
@@ -290,7 +291,9 @@
 
       offset += 10;
 
-      const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}`);
+      const resp = await fetch(
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=10&type=personal,generic&api_key=${HUNTER_API_KEY}`
+      );
       const data = await resp.json();
 
       const emails = data.data?.emails || [];
@@ -327,11 +330,13 @@
         await updateCredits(currentMeta.searches_remaining - 1, currentMeta.reveals_remaining);
       }
 
-      const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(domain)}`);
+      const resp = await fetch(
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=10&type=personal,generic&api_key=${b2eb114113547c1eeb296f358fb10653acc0727a}`
+      );
       const data = await resp.json();
 
       const emails = data.data?.emails || [];
-      totalResults = data.meta?.results || emails.length;
+      totalResults = data.data?.meta?.results || emails.length;
 
       const shown = emails.length;
       status.textContent = `Showing ${shown} of ${totalResults} contacts`;
