@@ -34,7 +34,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Return simplified structure for frontend
     res.status(200).json({
       results: data.data.emails || [],
       total: data.data.meta.results || 0,
