@@ -290,7 +290,7 @@
 
       offset += 10;
 
-      const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=50`);
+      const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}`);
       const data = await resp.json();
 
       const emails = data.data?.emails || [];
