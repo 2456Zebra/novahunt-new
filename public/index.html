@@ -331,7 +331,7 @@
       }
 
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=10&type=personal,generic&api_key=${b2eb114113547c1eeb296f358fb10653acc0727a}`
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=10&type=personal,generic&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
       );
       const data = await resp.json();
 
