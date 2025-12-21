@@ -193,7 +193,7 @@
       const saveBtn = document.createElement('button');
       saveBtn.className = 'secondary-btn';
       saveBtn.textContent = 'Save Email';
-      saveBtn.disabled = true; // cannot save before reveal
+      saveBtn.disabled = true;
 
       revealBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to reveal emails.');
@@ -203,14 +203,13 @@
         emailEl.textContent = fullEmail;
         revealBtn.disabled = true;
         revealBtn.textContent = 'Revealed';
-        saveBtn.disabled = false; // now saving is allowed
+        saveBtn.disabled = false;
       };
 
       saveBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to save contacts.');
-        if (saveBtn.disabled) return; // extra guard
+        if (saveBtn.disabled) return;
 
-        // refresh latest user metadata before saving
         const { data } = await client.auth.getUser();
         if (data && data.user) {
           currentUser = data.user;
@@ -288,12 +287,12 @@
         return;
       }
 
-      offset += 10;
+      offset += 50;
 
       const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}`);
       const data = await resp.json();
 
-      const emails = data.data?.emails || [];
+      const emails = data.results || [];
       renderResults(emails, currentDomain);
 
       const shown = document.querySelectorAll('.result-card').length;
@@ -330,8 +329,8 @@
       const resp = await fetch(`/api/hunter-search?domain=${encodeURIComponent(domain)}`);
       const data = await resp.json();
 
-      const emails = data.data?.emails || [];
-      totalResults = data.meta?.results || emails.length;
+      const emails = data.results || [];
+      totalResults = data.total || emails.length;
 
       const shown = emails.length;
       status.textContent = `Showing ${shown} of ${totalResults} contacts`;
