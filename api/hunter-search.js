@@ -14,7 +14,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${apiKey}&offset=${encodeURIComponent(offset)}&limit=10`;
+    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(
+  domain
+)}&api_key=${apiKey}&type=personal,generic&offset=${offset}&limit=50`;
+
 
     const response = await fetch(url);
     const data = await response.json();
