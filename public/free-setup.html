@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Free Plan Setup — NovaHunt.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .box {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #007bff, #06f);
+      color: white;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    #msg {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="box">
+    <h1>Free Plan</h1>
+    <p>Create your free account with starter limits.</p>
+    <input id="emailInput" type="email" placeholder="Email" autocomplete="email" required />
+    <input id="passwordInput" type="password" placeholder="Password" autocomplete="new-password" required />
+    <button id="createBtn">Create Free Account</button>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    const client = window.supabase.createClient(
+      'https://zusfblqrhqalgywcdvld.supabase.co',
+      'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
+    );
+
+    const emailEl = document.getElementById('emailInput');
+    const passEl = document.getElementById('passwordInput');
+    const msgEl = document.getElementById('msg');
+    const createBtn = document.getElementById('createBtn');
+
+    createBtn.onclick = async () => {
+      const email = emailEl.value.trim();
+      const password = passEl.value;
+
+      if (!email || !password) {
+        msgEl.textContent = 'Enter both email and password.';
+        return;
+      }
+
+      msgEl.textContent = 'Creating account...';
+      createBtn.disabled = true;
+
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            plan: 'Free',
+            searches_remaining: 5,
+            reveals_remaining: 3,
+            saved_contacts: []
+          },
+          emailRedirectTo: window.location.origin + '/account.html'
+        }
+      });
+
+      if (error) {
+        msgEl.textContent = 'Error creating account. You may already have an account.';
+        createBtn.disabled = false;
+        return;
+      }
+
+      msgEl.textContent = 'Account created. Check your email if confirmation is required.';
+      // If email confirmation is disabled in Supabase, we can redirect:
+      setTimeout(() => {
+        window.location.href = '/account.html';
+      }, 1500);
+    };
+  </script>
+
+</body>
+</html>
