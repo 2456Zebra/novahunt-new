@@ -68,6 +68,13 @@
       margin-top: 12px;
       font-size: 14px;
       color: #4b5563;
+      white-space: pre-wrap;
+      text-align: left;
+      margin-top: 20px;
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
     }
 
     .link-row {
@@ -111,16 +118,22 @@
     const loginBtn = document.getElementById('loginBtn');
     const forgotLink = document.getElementById('forgotLink');
 
+    function debug(message, data = null) {
+      msgEl.style.display = 'block';
+      msgEl.textContent = message + (data ? "\n\n" + JSON.stringify(data, null, 2) : "");
+    }
+
     loginBtn.onclick = async () => {
       const email = emailEl.value.trim();
       const password = passEl.value;
 
       if (!email || !password) {
-        msgEl.textContent = 'Enter both email and password.';
+        debug('Enter both email and password.');
         return;
       }
 
-      msgEl.textContent = 'Signing in...';
+      debug('Attempting login...');
+
       loginBtn.disabled = true;
 
       const { data, error } = await client.auth.signInWithPassword({
@@ -129,32 +142,44 @@
       });
 
       if (error) {
-        msgEl.textContent = 'Invalid email or password.';
+        debug(
+          "LOGIN FAILED\n" +
+          "Supabase error message: " + error.message + "\n" +
+          "Error code: " + (error.code || "none") + "\n\n" +
+          "This usually means:\n" +
+          "• Wrong password\n" +
+          "• Account created via Magic Link (no password set)\n" +
+          "• Email typo\n" +
+          "• Password too short\n" +
+          "• Account does not exist\n" +
+          "• Email confirmation still required (rare)\n",
+          error
+        );
         loginBtn.disabled = false;
         return;
       }
 
-      msgEl.textContent = 'Signed in. Redirecting...';
+      debug("SUCCESS — redirecting to account page...");
       window.location.href = '/account.html';
     };
 
     forgotLink.onclick = async () => {
       const email = emailEl.value.trim();
       if (!email) {
-        msgEl.textContent = 'Enter your email first, then click Forgot password.';
+        debug('Enter your email first, then click Forgot password.');
         return;
       }
 
-      msgEl.textContent = 'Sending reset email...';
+      debug('Sending reset email...');
 
       const { error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/login.html'
       });
 
       if (error) {
-        msgEl.textContent = 'Error sending reset email.';
+        debug("Reset password error:", error);
       } else {
-        msgEl.textContent = 'Check your email for a reset link.';
+        debug('Check your email for a reset link.');
       }
     };
   </script>
