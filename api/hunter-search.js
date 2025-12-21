@@ -1,8 +1,8 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   try {
     const domain = req.method === 'POST' ? req.body.domain : req.query.domain;
     const offset = req.query.offset || 0;
-    const limit = 50; // always return 50
+    const limit = 50;
 
     if (!domain) {
       res.status(400).json({ error: 'Missing domain parameter.' });
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ MUST include type=personal,generic or Hunter forces limit=10
     const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(
       domain
     )}&api_key=${apiKey}&type=personal,generic&offset=${offset}&limit=${limit}`;
@@ -30,7 +29,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Return simplified structure for your frontend
     res.status(200).json({
       results: data.data.emails || [],
       total: data.data.meta.results || 0,
@@ -39,4 +37,4 @@ export default async function handler(req, res) {
     console.error('Hunter search error:', err);
     res.status(500).json({ error: 'Unexpected server error.' });
   }
-}
+};
