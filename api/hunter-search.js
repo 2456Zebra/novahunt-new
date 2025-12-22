@@ -7,7 +7,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing domain parameter" });
     }
 
-    // Your Hunter.io API key (hard-coded for now – works immediately)
+    // Your Hunter.io API key (hard-coded for immediate working – change to env var later if you want)
     const apiKey = "b2eb114113547c1eeb296f358fb10653acc0727a";
 
     const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=${offset}&limit=${limit}&api_key=${apiKey}`;
