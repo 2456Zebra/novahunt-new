@@ -94,7 +94,7 @@
   </main>
 
   <script>
-    const HUNTER_API_KEY = "YOUR_HUNTER_API_KEY_HERE";
+    const HUNTER_API_KEY = "b2eb114113547c1eeb296f358fb10653acc0727a";
     const PAGE_SIZE = 20;
 
     const client = window.supabase.createClient(
@@ -293,7 +293,7 @@
       offset += PAGE_SIZE;
 
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${HUNTER_API_KEY}`
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
       );
       const data = await resp.json();
 
