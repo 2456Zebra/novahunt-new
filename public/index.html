@@ -95,7 +95,7 @@
 
   <script>
     const HUNTER_API_KEY = "YOUR_HUNTER_API_KEY_HERE";
-    const PAGE_SIZE = 75;
+    const PAGE_SIZE = 20;
 
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
@@ -234,7 +234,7 @@
 
         if (updated && updated.user) {
           currentUser = updated.user;
-          currentMeta = currentUser.user_metadata || currentMeta;
+          currentMeta = updated.user.user_metadata || currentMeta;
         }
 
         saveBtn.textContent = 'Saved';
