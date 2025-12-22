@@ -29,30 +29,21 @@
     .popular::after { content: "Most Popular"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #007bff; color: white; padding: 4px 16px; border-radius: 999px; font-size: 14px; font-weight: bold; }
     @media (max-width: 768px) { h1 { font-size: 36px; } .plan-price { font-size: 36px; } }
   </style>
+
   <script src="https://js.stripe.com/v3/"></script>
 </head>
+
 <body>
   <div class="page">
     <h1>Choose Your Plan</h1>
     <p class="subtitle">Unlimited team members • Powered by Hunter.io credits • Cancel anytime</p>
 
     <div class="plans-grid">
-      <!-- Free Plan -->
-      <div class="plan-card">
-        <div class="plan-name">Free</div>
-        <div class="plan-price">$0<span small>/month</span></div>
-        <ul class="plan-features">
-          <li>25 searches/month</li>
-          <li>Basic email verification</li>
-          <li>Community support</li>
-        </ul>
-        <button class="checkout-btn" onclick="alert('Free plan coming soon! Sign up for updates.')">Get Started Free</button>
-      </div>
 
       <!-- Starter Plan -->
       <div class="plan-card popular">
-        <div class="plan-name">Starter</div>
-        <div class="plan-price">$49<span small>/month</span></div>
+        <div class="plan-name">NovaHunt Starter</div>
+        <div class="plan-price">$9.99<small>/month</small></div>
         <ul class="plan-features">
           <li>500 searches/month</li>
           <li>1,000 verifications/month</li>
@@ -62,10 +53,10 @@
         <button class="checkout-btn" id="checkout-starter">Subscribe Now</button>
       </div>
 
-      <!-- Growth Plan -->
+      <!-- Pro Plan -->
       <div class="plan-card">
-        <div class="plan-name">Growth</div>
-        <div class="plan-price">$99<span small>/month</span></div>
+        <div class="plan-name">NovaHunt Pro</div>
+        <div class="plan-price">$39.99<small>/month</small></div>
         <ul class="plan-features">
           <li>2,000 searches/month</li>
           <li>4,000 verifications/month</li>
@@ -73,31 +64,60 @@
           <li>API access</li>
           <li>Team collaboration</li>
         </ul>
-        <button class="checkout-btn" id="checkout-growth">Subscribe Now</button>
+        <button class="checkout-btn" id="checkout-pro">Subscribe Now</button>
       </div>
+
+      <!-- Enterprise Plan -->
+      <div class="plan-card">
+        <div class="plan-name">NovaHunt Enterprise</div>
+        <div class="plan-price">$99.99<small>/month</small></div>
+        <ul class="plan-features">
+          <li>10,000 searches/month</li>
+          <li>20,000 verifications/month</li>
+          <li>Dedicated support</li>
+          <li>Custom integrations</li>
+          <li>Unlimited team members</li>
+        </ul>
+        <button class="checkout-btn" id="checkout-enterprise">Subscribe Now</button>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const stripe = Stripe('pk_test_YOUR_PUBLISHABLE_KEY'); // ← REPLACE with your Stripe Publishable Key
+    // LIVE publishable key
+    const stripe = Stripe('pk_live_51SKOGXGoE18NIDac3TADgVCyV4DVy9JB2LJUWkX64KBbXolAKyOnhQBnvdd2jiY3R3fDfXo8Gf71TtZZGZLVC7gd008YqNzicp');
 
+    // Starter
     document.getElementById('checkout-starter').addEventListener('click', () => {
       stripe.redirectToCheckout({
-        lineItems: [{ price: 'price_1YOUR_STARTER_PRICE_ID', quantity: 1 }],
+        lineItems: [{ price: 'price_1ShDV8GoE18NIDacri5ckZ3N', quantity: 1 }],
         mode: 'subscription',
         successUrl: window.location.origin + '?success=1',
         cancelUrl: window.location.origin + '/checkout?canceled=1',
       });
     });
 
-    document.getElementById('checkout-growth').addEventListener('click', () => {
+    // Pro
+    document.getElementById('checkout-pro').addEventListener('click', () => {
       stripe.redirectToCheckout({
-        lineItems: [{ price: 'price_1YOUR_GROWTH_PRICE_ID', quantity: 1 }],
+        lineItems: [{ price: 'price_1ShDVIGoE18NIDacvTKP5GoI', quantity: 1 }],
+        mode: 'subscription',
+        successUrl: window.location.origin + '?success=1',
+        cancelUrl: window.location.origin + '/checkout?canceled=1',
+      });
+    });
+
+    // Enterprise
+    document.getElementById('checkout-enterprise').addEventListener('click', () => {
+      stripe.redirectToCheckout({
+        lineItems: [{ price: 'price_1ShDVOGoE18NIDacBrhEw1sW', quantity: 1 }],
         mode: 'subscription',
         successUrl: window.location.origin + '?success=1',
         cancelUrl: window.location.origin + '/checkout?canceled=1',
       });
     });
   </script>
+
 </body>
 </html>
