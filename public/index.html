@@ -49,7 +49,7 @@
       cursor: pointer;
     }
 
-    /* Collapsible department styling */
+    /* Department collapsible styling - improved layout */
     .dept-header {
       font-size: 20px;
       font-weight: 700;
@@ -58,6 +58,7 @@
       user-select: none;
       display: flex;
       align-items: center;
+      justify-content: flex-start;
     }
     .dept-name { font-weight: 700; }
     .dept-count { font-size: 16px; font-weight: 500; color: #6b7280; margin-left: 8px; }
@@ -126,7 +127,7 @@
       'Department unknown'
     ];
 
-    // Track departments for dynamic updates
+    // Track departments for dynamic Load More
     const deptData = {};
 
     async function refreshUser() {
@@ -263,7 +264,6 @@
         deptData = {};
       }
 
-      // Group new emails
       const newGroups = {};
       emails.forEach(e => {
         let dept = e.department || 'Department unknown';
@@ -272,7 +272,6 @@
         newGroups[dept].push(e);
       });
 
-      // Sort by priority
       const sortedDepts = Object.keys(newGroups).sort((a, b) => {
         const indexA = deptOrder.indexOf(a);
         const indexB = deptOrder.indexOf(b);
@@ -289,7 +288,6 @@
 
         if (!deptDiv) {
           deptDiv = document.createElement('div');
-          deptDiv.className = 'dept-section';
 
           header = document.createElement('div');
           header.className = 'dept-header';
@@ -328,21 +326,16 @@
           countSpan = deptData[dept].countSpan;
         }
 
-        // Append emails
         newGroups[dept].forEach(e => renderSingleResult(e, content, domain));
 
-        // Update count
         deptData[dept].count += newGroups[dept].length;
         countSpan.textContent = `(${deptData[dept].count})`;
 
         first = false;
       });
 
-      // Update status
       const shown = document.querySelectorAll('.result-card').length;
       document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
-
-      // Show/hide Load More
       document.getElementById('loadMoreBtn').style.display = shown < totalResults ? 'block' : 'none';
     }
 
