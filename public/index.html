@@ -49,25 +49,25 @@
       cursor: pointer;
     }
 
-    /* New: Department collapsible styling */
+    /* Department collapsible styling — improved layout */
     .dept-header {
       font-size: 20px;
       font-weight: 700;
-      margin: 32px 0 12px;
+      margin: 32px 0 12px 0;
       cursor: pointer;
       user-select: none;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
     }
     .dept-name { font-weight: 700; }
-    .dept-count { font-weight: 500; color: #6b7280; margin-left: 8px; }
-    .dept-arrow { font-size: 18px; margin-left: 8px; transition: transform 0.2s; }
+    .dept-count { font-size: 16px; font-weight: 500; color: #6b7280; margin-left: 8px; }
+    .dept-arrow { font-size: 18px; margin-left: 12px; transition: transform 0.2s; }
     .dept-arrow.open { transform: rotate(180deg); }
     .dept-content { display: none; }
     .dept-content.open { display: block; }
 
-    /* Mobile fix (already added previously) */
+    /* Mobile fix */
     @media (max-width: 640px) {
       .brand { font-size: 48px !important; }
       .lead { font-size: 20px !important; }
@@ -113,7 +113,7 @@
     let totalResults = 0;
     let currentDomain = '';
 
-    // Department priority order (Executive first, Department unknown last)
+    // Priority order: Executive first, Department unknown last
     const deptOrder = [
       'Executive',
       'Management',
@@ -126,6 +126,9 @@
       'Support',
       'Department unknown'
     ];
+
+    // Track departments and counts for dynamic updates
+    const deptData = {}; // { dept: { count: 0, content: element, header: element } }
 
     async function refreshUser() {
       const { data } = await client.auth.getUser();
@@ -254,21 +257,24 @@
       container.appendChild(card);
     }
 
-    function renderResults(emails, domain) {
+    function renderResults(emails, domain, isLoadMore = false) {
       const container = document.getElementById('results');
-      container.innerHTML = '';
+      if (!isLoadMore) {
+        container.innerHTML = '';
+        deptData = {};
+      }
 
-      // Group by department
-      const groups = {};
+      // Group new emails by department
+      const newGroups = {};
       emails.forEach(e => {
         let dept = e.department || 'Department unknown';
         dept = dept.charAt(0).toUpperCase() + dept.slice(1);
-        if (!groups[dept]) groups[dept] = [];
-        groups[dept].push(e);
+        if (!newGroups[dept]) newGroups[dept] = [];
+        newGroups[dept].push(e);
       });
 
-      // Sort departments by priority order
-      const sortedDepts = Object.keys(groups).sort((a, b) => {
+      // Sort departments by priority
+      const sortedDepts = Object.keys(newGroups).sort((a, b) => {
         const indexA = deptOrder.indexOf(a);
         const indexB = deptOrder.indexOf(b);
         if (indexA === -1) return 1;
@@ -276,36 +282,70 @@
         return indexA - indexB;
       });
 
-      let first = true;
+      let first = Object.keys(deptData).length === 0; // Only first on initial load
+
       sortedDepts.forEach(dept => {
-        const deptDiv = document.createElement('div');
-        deptDiv.className = 'dept-section';
+        let deptDiv = deptData[dept]?.div;
+        let header = deptData[dept]?.header;
+        let content = deptData[dept]?.content;
+        let countSpan = deptData[dept]?.countSpan;
 
-        const header = document.createElement('div');
-        header.className = 'dept-header';
-        header.innerHTML = `
-          <span class="dept-name">${dept}</span>
-          <span class="dept-count">(${groups[dept].length})</span>
-          <span class="dept-arrow">${first ? '▲' : '▼'}</span>
-        `;
+        if (!deptDiv) {
+          deptDiv = document.createElement('div');
+          deptDiv.className = 'dept-section';
 
-        const content = document.createElement('div');
-        content.className = 'dept-content';
-        if (first) content.classList.add('open');
-        first = false;
+          header = document.createElement('div');
+          header.className = 'dept-header';
 
-        groups[dept].forEach(e => renderSingleResult(e, content, domain));
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'dept-name';
+          nameSpan.textContent = dept;
 
-        header.onclick = () => {
-          content.classList.toggle('open');
-          const arrow = header.querySelector('.dept-arrow');
-          arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
-        };
+          countSpan = document.createElement('span');
+          countSpan.className = 'dept-count';
+          countSpan.textContent = `(0)`;
 
-        deptDiv.appendChild(header);
-        deptDiv.appendChild(content);
-        container.appendChild(deptDiv);
+          const arrow = document.createElement('span');
+          arrow.className = 'dept-arrow';
+          arrow.textContent = first ? '▲' : '▼';
+
+          header.appendChild(nameSpan);
+          header.appendChild(countSpan);
+          header.appendChild(arrow);
+
+          content = document.createElement('div');
+          content.className = 'dept-content';
+          if (first) content.classList.add('open');
+          first = false;
+
+          header.onclick = () => {
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
+          };
+
+          deptDiv.appendChild(header);
+          deptDiv.appendChild(content);
+          container.appendChild(deptDiv);
+
+          deptData[dept] = { div: deptDiv, header, content, countSpan, count: 0 };
+        } else {
+          countSpan = deptData[dept].countSpan;
+        }
+
+        // Append new emails
+        newGroups[dept].forEach(e => renderSingleResult(e, content, domain));
+
+        // Update count
+        deptData[dept].count += newGroups[dept].length;
+        countSpan.textContent = `(${deptData[dept].count})`;
       });
+
+      // Update status
+      const shown = document.querySelectorAll('.result-card').length;
+      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
+
+      // Show/hide Load More
+      document.getElementById('loadMoreBtn').style.display = shown < totalResults ? 'block' : 'none';
     }
 
     async function loadMore() {
@@ -319,12 +359,7 @@
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
-      renderResults(emails, currentDomain);
-      const shown = document.querySelectorAll('.result-card').length;
-      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
-      if (shown >= totalResults || !emails.length) {
-        document.getElementById('loadMoreBtn').style.display = 'none';
-      }
+      renderResults(emails, currentDomain, true); // true = isLoadMore
     }
 
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
@@ -352,12 +387,7 @@
       const data = await resp.json();
       const emails = data.data?.emails || [];
       totalResults = data.meta?.results || emails.length;
-      const shown = emails.length;
-      status.textContent = `Showing ${shown} of ${totalResults} contacts`;
       renderResults(emails, domain);
-      if (shown < totalResults) {
-        document.getElementById('loadMoreBtn').style.display = 'block';
-      }
     });
 
     refreshUser();
