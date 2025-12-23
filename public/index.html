@@ -128,7 +128,7 @@
     ];
 
     // Track departments for dynamic updates
-    const deptData = {};
+    let deptData = {};
 
     async function refreshUser() {
       const { data } = await client.auth.getUser();
@@ -148,12 +148,23 @@
       currentMeta = currentUser.user_metadata || {};
       authLink.textContent = 'Account';
       authLink.href = '/account';
+
       const plan = currentMeta.plan || 'Free';
-      const searches = currentMeta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
-      const reveals = currentMeta.reveals_remaining ?? (plan === 'Starter' ? 50 : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
+      const searches = currentMeta.searches_remaining ?? (
+        plan === 'Starter' ? 100 :
+        plan === 'Pro' ? 500 :
+        plan === 'Enterprise' ? 2500 : 5
+      );
+      const reveals = currentMeta.reveals_remaining ?? (
+        plan === 'Starter' ? 50 :
+        plan === 'Pro' ? 250 :
+        plan === 'Enterprise' ? 1500 : 3
+      );
+
       document.getElementById('plansButton').style.display = plan === 'Free' ? 'inline-flex' : 'none';
       document.getElementById('accountButton').style.display = 'inline-flex';
       document.getElementById('upgradeButton').style.display = plan === 'Enterprise' ? 'none' : 'inline-flex';
+
       const banner = document.getElementById('creditsBanner');
       banner.style.display = 'block';
       banner.innerHTML = `Plan: <b>${plan}</b> · Searches left: <b>${searches}</b> · Reveals left: <b>${reveals}</b>`;
@@ -175,34 +186,56 @@
         `Plan: <b>${currentMeta.plan}</b> · Searches left: <b>${currentMeta.searches_remaining}</b> · Reveals left: <b>${currentMeta.reveals_remaining}</b>`;
     }
 
-    function renderSingleResult(e, container, domain) {
+    function renderSingleResult(e, container, domain, acceptAll) {
       const fullEmail = e.value || '';
       const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Unknown';
       const role = e.position || 'No title';
       const masked = fullEmail.replace(/(.{2}).+(@.*)/, '$1*****$2');
+
       const card = document.createElement('div');
       card.className = 'result-card';
+
       const nameEl = document.createElement('div');
       nameEl.className = 'result-name';
       nameEl.textContent = name;
+
       const roleEl = document.createElement('div');
       roleEl.className = 'result-role';
       roleEl.textContent = role;
+
       const confEl = document.createElement('div');
       confEl.className = 'result-role';
       confEl.textContent = `${e.confidence}% confidence`;
+
+      // Accept-all domain warning (domain-level from Hunter API)
+      if (acceptAll || e.accept_all || e.status === 'accept-all') {
+        const warnEl = document.createElement('div');
+        warnEl.className = 'result-role';
+        warnEl.style.color = '#b91c1c'; // subtle red for emphasis
+        warnEl.textContent = '⚠️ This domain accepts all emails. Actual existence cannot be confirmed.';
+        card.appendChild(warnEl);
+
+        // Cap confidence visually to avoid misleading users
+        const adjusted = Math.min(e.confidence || 0, 70);
+        confEl.textContent = `${adjusted}% confidence (adjusted)`;
+      }
+
       const emailEl = document.createElement('div');
       emailEl.className = 'result-email';
       emailEl.textContent = masked;
+
       const actions = document.createElement('div');
       actions.style.marginTop = '10px';
+
       const revealBtn = document.createElement('button');
       revealBtn.className = 'secondary-btn';
       revealBtn.textContent = 'Reveal Email';
+
       const saveBtn = document.createElement('button');
       saveBtn.className = 'secondary-btn';
       saveBtn.textContent = 'Save Email';
       saveBtn.disabled = true;
+
       revealBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to reveal emails.');
         if (currentMeta.reveals_remaining <= 0) return alert('No reveals left.');
@@ -212,6 +245,7 @@
         revealBtn.textContent = 'Revealed';
         saveBtn.disabled = false;
       };
+
       saveBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to save contacts.');
         if (saveBtn.disabled) return;
@@ -238,6 +272,7 @@
         saveBtn.textContent = 'Saved';
         saveBtn.disabled = true;
       };
+
       const sourceBtn = document.createElement('button');
       sourceBtn.className = 'secondary-btn';
       sourceBtn.textContent = 'Source';
@@ -246,18 +281,21 @@
         const q = encodeURIComponent(`${name} ${domain}`);
         window.open(`https://www.google.com/search?q=${q}`, '_blank');
       };
+
       actions.appendChild(revealBtn);
       actions.appendChild(saveBtn);
       actions.appendChild(sourceBtn);
+
       card.appendChild(nameEl);
       card.appendChild(roleEl);
       card.appendChild(confEl);
       card.appendChild(emailEl);
       card.appendChild(actions);
+
       container.appendChild(card);
     }
 
-    function renderResults(emails, domain, isLoadMore = false) {
+    function renderResults(emails, domain, isLoadMore = false, acceptAll = false) {
       const container = document.getElementById('results');
       if (!isLoadMore) {
         container.innerHTML = '';
@@ -330,7 +368,7 @@
         }
 
         // Append new emails
-        newGroups[dept].forEach(e => renderSingleResult(e, content, domain));
+        newGroups[dept].forEach(e => renderSingleResult(e, content, domain, acceptAll));
 
         // Update count
         deptData[dept].count += newGroups[dept].length;
@@ -358,7 +396,8 @@
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
-      renderResults(emails, currentDomain, true);
+      const acceptAll = !!data.data?.accept_all;
+      renderResults(emails, currentDomain, true, acceptAll);
     }
 
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
@@ -385,8 +424,9 @@
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
+      const acceptAll = !!data.data?.accept_all; // domain-level flag from Hunter
       totalResults = data.meta?.results || emails.length;
-      renderResults(emails, domain);
+      renderResults(emails, domain, false, acceptAll);
       const shown = emails.length;
       status.textContent = `Showing ${shown} of ${totalResults} contacts`;
       if (shown < totalResults) {
@@ -396,7 +436,7 @@
 
     refreshUser();
   </script>
-  <!-- ⭐ ADDED FOOTER -->
+  <!-- ⭐ Footer -->
   <footer style="
     text-align:center;
     padding:20px 0;
