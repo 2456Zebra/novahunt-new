@@ -382,13 +382,12 @@
         await updateCredits(currentMeta.searches_remaining - 1, currentMeta.reveals_remaining);
       }
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}&api_key=${HUNTER_API_KEY}`
-      );
-      const data = await resp.json();
-      const emails = data.data?.emails || [];
-      totalResults = data.meta?.results || emails.length;
-      renderResults(emails, domain);
-    });
+  `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}`
+);
+if (!resp.ok) {
+  status.textContent = 'Search temporarily unavailable — Hunter.io API key required for full results.';
+  return;
+});
 
     refreshUser();
   </script>
