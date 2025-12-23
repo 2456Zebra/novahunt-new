@@ -2,12 +2,11 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  const { email, domain } = req.body;
+  const { domain } = req.body;
 
   try {
-    // Call Hunter.io API
     const response = await fetch(
-      `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTER_API_KEY}`
+      `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=250&api_key=${process.env.HUNTER_API_KEY}`
     );
     const data = await response.json();
 
@@ -17,33 +16,18 @@ export default async function handler(req, res) {
 
     const result = data.data;
     let customStatus = result.status;
-    let confidence = result.score || 0;
-    let message = 'Verified with Hunter.io';
+    let emails = result.emails || [];
 
     // Handle accept-all domains
     if (result.accept_all) {
       customStatus = 'accept-all';
-      confidence = Math.min(confidence, 70); // cap confidence
-      message = '⚠️ This domain accepts all emails. Actual existence cannot be confirmed.';
-    }
-
-    // Optional: enforce known format for financeofamerica.com
-    if (domain === 'financeofamerica.com') {
-      const pattern = /^[a-z]+\.[a-z]+@financeofamerica\.com$/i;
-      if (!pattern.test(email)) {
-        customStatus = 'format-mismatch';
-        confidence = 50;
-        message = 'Email does not match known company format (first.last@financeofamerica.com).';
-      }
+      emails = emails.map(e => ({ ...e, confidence: Math.min(e.confidence || 0, 70) }));
     }
 
     res.status(200).json({
-      email,
-      domain,
       status: customStatus,
-      confidence,
-      message,
-      raw: result // keep raw Hunter.io data for debugging
+      emails,
+      total: emails.length
     });
   } catch (error) {
     console.error(error);
