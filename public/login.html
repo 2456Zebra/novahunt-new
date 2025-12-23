@@ -4,11 +4,9 @@
   <meta charset="utf-8"/>
   <title>Login — NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-
   <style>
     body {
       margin: 0;
@@ -20,7 +18,6 @@
       height: 100vh;
       padding: 20px;
     }
-
     .box {
       background: white;
       padding: 32px;
@@ -30,13 +27,11 @@
       max-width: 420px;
       text-align: center;
     }
-
     h1 {
       margin-bottom: 12px;
       font-size: 32px;
       font-weight: 800;
     }
-
     input {
       width: 100%;
       padding: 14px;
@@ -45,7 +40,6 @@
       border-radius: 10px;
       margin-bottom: 12px;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -58,12 +52,10 @@
       cursor: pointer;
       margin-top: 4px;
     }
-
     button:disabled {
       opacity: 0.7;
       cursor: default;
     }
-
     #msg {
       margin-top: 12px;
       font-size: 14px;
@@ -76,13 +68,11 @@
       border-radius: 8px;
       display: none;
     }
-
     .link-row {
       margin-top: 10px;
       text-align: right;
       font-size: 13px;
     }
-
     .link-row a {
       color: #007bff;
       text-decoration: none;
@@ -90,11 +80,9 @@
       font-weight: 500;
     }
   </style>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
   <div class="box">
     <h1>Sign In</h1>
     <input id="emailInput" type="email" placeholder="Email" autocomplete="email" required />
@@ -105,42 +93,33 @@
     </div>
     <div id="msg"></div>
   </div>
-
   <script>
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
       'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
     );
-
     const emailEl = document.getElementById('emailInput');
     const passEl = document.getElementById('passwordInput');
     const msgEl = document.getElementById('msg');
     const loginBtn = document.getElementById('loginBtn');
     const forgotLink = document.getElementById('forgotLink');
-
     function debug(message, data = null) {
       msgEl.style.display = 'block';
       msgEl.textContent = message + (data ? "\n\n" + JSON.stringify(data, null, 2) : "");
     }
-
     loginBtn.onclick = async () => {
       const email = emailEl.value.trim();
       const password = passEl.value;
-
       if (!email || !password) {
         debug('Enter both email and password.');
         return;
       }
-
       debug('Attempting login...');
-
       loginBtn.disabled = true;
-
       const { data, error } = await client.auth.signInWithPassword({
         email,
         password
       });
-
       if (error) {
         debug(
           "LOGIN FAILED\n" +
@@ -158,24 +137,20 @@
         loginBtn.disabled = false;
         return;
       }
-
       debug("SUCCESS — redirecting to account page...");
-      window.location.href = '/account.html';
+      // FIXED: Redirect to clean /account URL (no .html)
+      window.location.href = '/account';
     };
-
     forgotLink.onclick = async () => {
       const email = emailEl.value.trim();
       if (!email) {
         debug('Enter your email first, then click Forgot password.');
         return;
       }
-
       debug('Sending reset email...');
-
       const { error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/login.html'
       });
-
       if (error) {
         debug("Reset password error:", error);
       } else {
@@ -183,6 +158,5 @@
       }
     };
   </script>
-
 </body>
 </html>
