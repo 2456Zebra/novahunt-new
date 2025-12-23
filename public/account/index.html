@@ -4,136 +4,32 @@
   <meta charset="utf-8"/>
   <title>Account — NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Inter", sans-serif;
-      background: #f9fafb;
-      color: #111827;
-    }
-
-    .top-link {
-      position: absolute;
-      top: 20px;
-      right: 24px;
-      font-weight: 700;
-      font-size: 16px;
-      color: #007bff;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .page {
-      padding: 56px 20px;
-      max-width: 1080px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: 36px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .sub {
-      color: #4b5563;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px 24px;
-      box-shadow: 0 10px 30px rgba(15,23,42,.08);
-      margin-bottom: 24px;
-    }
-
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .label {
-      font-weight: 600;
-      font-size: 14px;
-      color: #6b7280;
-      margin-right: 8px;
-    }
-
-    .value {
-      font-weight: 700;
-    }
-
-    button.primary {
-      padding: 10px 18px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(180deg, #007bff, #06f);
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button.secondary,
-    a.secondary {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      color: #111827;
-      display: inline-block;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    th, td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    th {
-      font-weight: 600;
-      color: #6b7280;
-      font-size: 13px;
-    }
-
-    td.actions {
-      white-space: nowrap;
-    }
-
-    @media (max-width: 640px) {
-      .row { flex-direction: column; align-items: flex-start; }
-      table { font-size: 13px; }
-      th, td { padding: 8px 4px; }
-    }
+    body { margin: 0; font-family: "Inter", sans-serif; background: #f9fafb; color: #111827; }
+    .top-link { position: absolute; top: 20px; right: 24px; font-weight: 700; font-size: 16px; color: #007bff; cursor: pointer; text-decoration: none; }
+    .page { padding: 56px 20px; max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+    .sub { color: #4b5563; margin-bottom: 20px; }
+    .card { background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 10px 30px rgba(15,23,42,.08); margin-bottom: 24px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .label { font-weight: 600; font-size: 14px; color: #6b7280; margin-right: 8px; }
+    .value { font-weight: 700; }
+    button.primary { padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(180deg, #007bff, #06f); color: white; font-weight: 700; cursor: pointer; }
+    button.secondary, a.secondary { padding: 8px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #f9fafb; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; color: #111827; display: inline-block; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; }
+    th { font-weight: 600; color: #6b7280; font-size: 13px; }
+    td.actions { white-space: nowrap; }
+    @media (max-width: 640px) { .row { flex-direction: column; align-items: flex-start; } table { font-size: 13px; } th, td { padding: 8px 4px; } }
   </style>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
   <a href="/" class="top-link">New Search</a>
-
   <main class="page">
     <h1>Your Account</h1>
     <p class="sub">Manage your plan, credits, and saved contacts.</p>
@@ -141,30 +37,28 @@
     <section class="card" id="accountInfo">
       <div class="row">
         <div>
-          <span class="label">Email:</span>
-          <span class="value" id="userEmail">—</span>
+          <span class="label">Email:</span> <span class="value" id="userEmail">—</span>
         </div>
         <button class="primary" id="logoutBtn">Log Out</button>
       </div>
+
       <div class="row">
         <div>
-          <span class="label">Plan:</span>
-          <span class="value" id="planValue">—</span>
+          <span class="label">Plan:</span> <span class="value" id="planValue">—</span>
         </div>
         <div>
           <a href="/plans.html" class="secondary" id="upgradeBtn">Upgrade Plan</a>
-          <!-- NEW: Cancel button -->
-          <button class="secondary" id="cancelBtn" style="margin-left:8px;">Cancel Subscription</button>
+          <!-- SAFE PORTAL BUTTON -->
+          <a href="https://billing.stripe.com/p/login/bpc_1ShWtTGoE18NIDacMQNArW7q" target="_blank" class="secondary" id="manageBtn" style="margin-left:8px;">Manage Subscription</a>
         </div>
       </div>
+
       <div class="row">
         <div>
-          <span class="label">Searches remaining:</span>
-          <span class="value" id="searchesValue">—</span>
+          <span class="label">Searches remaining:</span> <span class="value" id="searchesValue">—</span>
         </div>
         <div>
-          <span class="label">Reveals remaining:</span>
-          <span class="value" id="revealsValue">—</span>
+          <span class="label">Reveals remaining:</span> <span class="value" id="revealsValue">—</span>
         </div>
       </div>
     </section>
@@ -201,7 +95,6 @@
 
     async function loadAccount() {
       const { data } = await client.auth.getUser();
-
       if (!data.user) {
         window.location.href = '/login.html';
         return;
@@ -214,11 +107,7 @@
 
       const plan = currentMeta.plan || 'Free';
       const searches = currentMeta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
-      const reveals  = currentMeta.reveals_remaining  ?? (plan === 'Starter' ? 50  : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
-
-      currentMeta.plan = plan;
-      currentMeta.searches_remaining = searches;
-      currentMeta.reveals_remaining = reveals;
+      const reveals = currentMeta.reveals_remaining ?? (plan === 'Starter' ? 50 : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
 
       document.getElementById('planValue').textContent = plan;
       document.getElementById('searchesValue').textContent = searches;
@@ -226,12 +115,12 @@
 
       document.getElementById('upgradeBtn').style.display = plan === 'Enterprise' ? 'none' : 'inline-block';
 
-      // NEW: show/hide Cancel button based on plan + presence of stripe_customer_id
-      const cancelBtn = document.getElementById('cancelBtn');
-      if (plan === 'Free' || !currentMeta.stripe_customer_id) {
-        cancelBtn.style.display = 'none';
+      // Show Manage button only for paid plans
+      const manageBtn = document.getElementById('manageBtn');
+      if (plan === 'Free') {
+        manageBtn.style.display = 'none';
       } else {
-        cancelBtn.style.display = 'inline-block';
+        manageBtn.style.display = 'inline-block';
       }
 
       renderSavedContacts();
@@ -239,7 +128,6 @@
 
     function renderSavedContacts() {
       const saved = currentMeta.saved_contacts || [];
-
       const emptyMsg = document.getElementById('savedEmpty');
       const table = document.getElementById('savedTable');
       const body = document.getElementById('savedBody');
@@ -247,7 +135,6 @@
       if (!saved.length) {
         emptyMsg.style.display = 'block';
         table.style.display = 'none';
-        body.innerHTML = '';
         return;
       }
 
@@ -255,44 +142,18 @@
       table.style.display = 'table';
       body.innerHTML = '';
 
-      saved.forEach((c, idx) => {
+      saved.forEach((c) => {
         const tr = document.createElement('tr');
-
-        const nameTd = document.createElement('td');
-        nameTd.textContent = c.name || '—';
-
-        const emailTd = document.createElement('td');
-        emailTd.textContent = c.email || '—';
-
-        const roleTd = document.createElement('td');
-        roleTd.textContent = c.role || '—';
-
-        const domainTd = document.createElement('td');
-        domainTd.textContent = c.domain || '—';
-
-        const savedTd = document.createElement('td');
-        savedTd.textContent = c.saved_at ? new Date(c.saved_at).toLocaleDateString() : '—';
-
-        const actionsTd = document.createElement('td');
-        actionsTd.className = 'actions';
-
-        const sourceBtn = document.createElement('button');
-        sourceBtn.className = 'secondary';
-        sourceBtn.textContent = 'Source';
-        sourceBtn.onclick = () => {
-          const q = encodeURIComponent(`${c.name || ''} ${c.domain || ''}`);
-          window.open(`https://www.google.com/search?q=${q}`, '_blank');
-        };
-
-        actionsTd.appendChild(sourceBtn);
-
-        tr.appendChild(nameTd);
-        tr.appendChild(emailTd);
-        tr.appendChild(roleTd);
-        tr.appendChild(domainTd);
-        tr.appendChild(savedTd);
-        tr.appendChild(actionsTd);
-
+        tr.innerHTML = `
+          <td>${c.name || '—'}</td>
+          <td>${c.email || '—'}</td>
+          <td>${c.role || '—'}</td>
+          <td>${c.domain || '—'}</td>
+          <td>${c.saved_at ? new Date(c.saved_at).toLocaleDateString() : '—'}</td>
+          <td class="actions">
+            <button class="secondary" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent((c.name || '') + ' ' + (c.domain || ''))}', '_blank')">Source</button>
+          </td>
+        `;
         body.appendChild(tr);
       });
     }
@@ -302,54 +163,11 @@
       window.location.href = '/';
     };
 
-    // NEW: Cancel subscription handler
-    document.getElementById('cancelBtn').onclick = async () => {
-      if (!currentMeta || !currentMeta.stripe_customer_id) {
-        alert("No Stripe subscription found for this account.");
-        return;
-      }
-
-      if (!confirm("Are you sure you want to cancel your subscription? You will keep access until the end of the billing period.")) {
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/cancel-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customer_id: currentMeta.stripe_customer_id })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          alert("Your subscription has been canceled. You will keep access until the end of the billing period.");
-          window.location.reload();
-        } else {
-          alert("Error canceling subscription: " + (data.error || "Unknown error"));
-        }
-      } catch (err) {
-        alert("Network error canceling subscription.");
-      }
-    };
-
     loadAccount();
   </script>
 
-  <!-- Footer -->
-  <footer style="
-    text-align:center;
-    padding:20px 0;
-    font-size:14px;
-    color:#6b7280;
-    border-top:1px solid #e5e7eb;
-    margin-top:40px;
-  ">
-    © 2026 NovaHunt.ai —
-    <a href="mailto:hello@novahunt.ai" style="color:#6b7280; text-decoration:none;">
-      Contact
-    </a>
+  <footer style="text-align:center; padding:20px 0; font-size:14px; color:#6b7280; border-top:1px solid #e5e7eb; margin-top:40px;">
+    © 2026 NovaHunt.ai — <a href="mailto:hello@novahunt.ai" style="color:#6b7280; text-decoration:none;">Contact</a>
   </footer>
-
 </body>
 </html>
