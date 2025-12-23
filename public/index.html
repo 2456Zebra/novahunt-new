@@ -4,16 +4,13 @@
   <meta charset="utf-8"/>
   <title>NovaHunt.ai</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-
   <style>
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
     body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; }
-
     #authLink {
       position: absolute;
       top: 20px;
@@ -24,36 +21,24 @@
       cursor: pointer;
       text-decoration: none;
     }
-
     .page-root { display: flex; flex-direction: column; align-items: center; padding: 56px 20px; text-align: center; }
-
     .brand { font-size: 72px; font-weight: 800; margin: 0 0 8px; }
     .lead { font-weight: 500; font-size: 28px; color: #4b5563; max-width: 920px; margin: 0 0 18px; }
-
     .domain-form { width: 100%; max-width: 1080px; display: flex; flex-direction: column; align-items: center; }
     input[type="text"] { width: 100%; max-width: 920px; padding: 28px 26px; font-size: 24px; border: 2px solid #d1d5db; border-radius: 28px; margin-bottom: 10px; }
-
     .actions-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-
     .cta { display: inline-flex; align-items: center; justify-content: center; padding: 16px 36px; border-radius: 16px; font-weight: 800; font-size: 18px; background: linear-gradient(180deg, #007bff, #06f); color: #fff; text-decoration: none; cursor: pointer; border: none; }
-
     .results-wrap { width: 100%; max-width: 920px; margin-top: 22px; text-align: left; }
-
     .result-card { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(15,23,42,.08); }
-
     .result-name { font-weight: 600; }
     .result-role { font-size: 14px; color: #6b7280; }
     .result-email { font-size: 14px; color: #111827; }
-
     .secondary-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #f9fafb; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 8px; }
-
     .secondary-btn:disabled {
       opacity: 0.6;
       cursor: default;
     }
-
     h3 { margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 700; }
-
     #loadMoreBtn {
       display: none;
       margin: 20px auto;
@@ -65,54 +50,42 @@
       cursor: pointer;
     }
   </style>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
   <a id="authLink" href="/login.html">Sign In</a>
-
   <main class="page-root">
     <h1 class="brand">NovaHunt.ai</h1>
     <p class="lead">Find business emails instantly. Enter a company domain and get professional contacts.</p>
-
     <form class="domain-form" id="searchForm">
       <input id="domainInput" type="text" placeholder="Enter domain, e.g. coca-cola.com" required />
       <div class="actions-row">
         <button type="submit" class="cta">New Search</button>
         <a href="/plans.html" class="cta" id="plansButton">View Plans & Pricing</a>
-        <a href="/account.html" class="cta" id="accountButton" style="display:none;">Go to Account</a>
+        <a href="/account" class="cta" id="accountButton" style="display:none;">Go to Account</a>
         <a href="/plans.html" class="cta" id="upgradeButton" style="display:none;">Upgrade Plan</a>
       </div>
     </form>
-
     <div id="creditsBanner" style="margin-top:16px; font-size:14px; color:#4b5563; display:none;"></div>
     <div id="statusMsg" style="margin-top:16px; font-size:14px; color:#6b7280;"></div>
     <div class="results-wrap" id="results"></div>
-
     <button id="loadMoreBtn">Load More</button>
   </main>
-
   <script>
     const HUNTER_API_KEY = "b2eb114113547c1eeb296f358fb10653acc0727a";
     const PAGE_SIZE = 100;
-
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
       'sb_publishable_KVGRBPQZKqrhQomdahPBaQ_Yz2XXPx2'
     );
-
     let currentUser = null;
     let currentMeta = null;
-
     let offset = 0;
     let totalResults = 0;
     let currentDomain = '';
-
     async function refreshUser() {
       const { data } = await client.auth.getUser();
       const authLink = document.getElementById('authLink');
-
       if (!data.user) {
         currentUser = null;
         currentMeta = null;
@@ -124,30 +97,23 @@
         document.getElementById('creditsBanner').style.display = 'none';
         return;
       }
-
       currentUser = data.user;
       currentMeta = currentUser.user_metadata || {};
-
       authLink.textContent = 'Account';
-      authLink.href = '/account.html';
-
+      authLink.href = '/account';
       const plan = currentMeta.plan || 'Free';
       const searches = currentMeta.searches_remaining ?? (plan === 'Starter' ? 100 : plan === 'Pro' ? 500 : plan === 'Enterprise' ? 2500 : 5);
-      const reveals  = currentMeta.reveals_remaining  ?? (plan === 'Starter' ? 50  : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
-
+      const reveals = currentMeta.reveals_remaining ?? (plan === 'Starter' ? 50 : plan === 'Pro' ? 250 : plan === 'Enterprise' ? 1500 : 3);
       document.getElementById('plansButton').style.display = plan === 'Free' ? 'inline-flex' : 'none';
       document.getElementById('accountButton').style.display = 'inline-flex';
       document.getElementById('upgradeButton').style.display = plan === 'Enterprise' ? 'none' : 'inline-flex';
-
       const banner = document.getElementById('creditsBanner');
       banner.style.display = 'block';
       banner.innerHTML = `Plan: <b>${plan}</b> · Searches left: <b>${searches}</b> · Reveals left: <b>${reveals}</b>`;
-
       currentMeta.plan = plan;
       currentMeta.searches_remaining = searches;
       currentMeta.reveals_remaining = reveals;
     }
-
     async function updateCredits(newSearches, newReveals) {
       if (!currentUser) return;
       const { data } = await client.auth.updateUser({
@@ -160,65 +126,51 @@
       document.getElementById('creditsBanner').innerHTML =
         `Plan: <b>${currentMeta.plan}</b> · Searches left: <b>${currentMeta.searches_remaining}</b> · Reveals left: <b>${currentMeta.reveals_remaining}</b>`;
     }
-
     function renderSingleResult(e, container, domain) {
       const fullEmail = e.value || '';
       const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Unknown';
       const role = e.position || 'No title';
       const masked = fullEmail.replace(/(.{2}).+(@.*)/, '$1*****$2');
-
       const card = document.createElement('div');
       card.className = 'result-card';
-
       const nameEl = document.createElement('div');
       nameEl.className = 'result-name';
       nameEl.textContent = name;
-
       const roleEl = document.createElement('div');
       roleEl.className = 'result-role';
       roleEl.textContent = role;
-
       const confEl = document.createElement('div');
       confEl.className = 'result-role';
       confEl.textContent = `${e.confidence}% confidence`;
-
       const emailEl = document.createElement('div');
       emailEl.className = 'result-email';
       emailEl.textContent = masked;
-
       const actions = document.createElement('div');
       actions.style.marginTop = '10px';
-
       const revealBtn = document.createElement('button');
       revealBtn.className = 'secondary-btn';
       revealBtn.textContent = 'Reveal Email';
-
       const saveBtn = document.createElement('button');
       saveBtn.className = 'secondary-btn';
       saveBtn.textContent = 'Save Email';
       saveBtn.disabled = true;
-
       revealBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to reveal emails.');
         if (currentMeta.reveals_remaining <= 0) return alert('No reveals left.');
-
         await updateCredits(currentMeta.searches_remaining, currentMeta.reveals_remaining - 1);
         emailEl.textContent = fullEmail;
         revealBtn.disabled = true;
         revealBtn.textContent = 'Revealed';
         saveBtn.disabled = false;
       };
-
       saveBtn.onclick = async () => {
         if (!currentUser) return alert('Log in to save contacts.');
         if (saveBtn.disabled) return;
-
         const { data } = await client.auth.getUser();
         if (data && data.user) {
           currentUser = data.user;
           currentMeta = currentUser.user_metadata || currentMeta;
         }
-
         const saved = (currentMeta.saved_contacts || []).slice();
         saved.push({
           email: fullEmail,
@@ -227,102 +179,78 @@
           domain,
           saved_at: new Date().toISOString()
         });
-
         const { data: updated } = await client.auth.updateUser({
           data: { ...currentMeta, saved_contacts: saved }
         });
-
         if (updated && updated.user) {
           currentUser = updated.user;
           currentMeta = updated.user.user_metadata || currentMeta;
         }
-
         saveBtn.textContent = 'Saved';
         saveBtn.disabled = true;
       };
-
       const sourceBtn = document.createElement('button');
       sourceBtn.className = 'secondary-btn';
       sourceBtn.textContent = 'Source';
-
       sourceBtn.onclick = () => {
         if (!currentUser) return alert('Log in to view sources.');
         const q = encodeURIComponent(`${name} ${domain}`);
         window.open(`https://www.google.com/search?q=${q}`, '_blank');
       };
-
       actions.appendChild(revealBtn);
       actions.appendChild(saveBtn);
       actions.appendChild(sourceBtn);
-
       card.appendChild(nameEl);
       card.appendChild(roleEl);
       card.appendChild(confEl);
       card.appendChild(emailEl);
       card.appendChild(actions);
-
       container.appendChild(card);
     }
-
     function renderResults(emails, domain) {
       const container = document.getElementById('results');
-
       const groups = {};
-
       emails.forEach(e => {
         const dept = e.department || 'Other';
         if (!groups[dept]) groups[dept] = [];
         groups[dept].push(e);
       });
-
       Object.keys(groups).forEach(dept => {
         const header = document.createElement('h3');
         header.textContent = dept.charAt(0).toUpperCase() + dept.slice(1);
         container.appendChild(header);
-
         groups[dept].forEach(e => renderSingleResult(e, container, domain));
       });
     }
-
     async function loadMore() {
       if (!currentUser) {
         alert('Sign up or log in to load more results.');
         return;
       }
-
       offset += PAGE_SIZE;
-
       const resp = await fetch(
         `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
       );
       const data = await resp.json();
-
       const emails = data.data?.emails || [];
       renderResults(emails, currentDomain);
-
       const shown = document.querySelectorAll('.result-card').length;
       document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
-
       if (shown >= totalResults || !emails.length) {
         document.getElementById('loadMoreBtn').style.display = 'none';
       }
     }
-
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
-
     document.getElementById('searchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const domain = document.getElementById('domainInput').value.trim();
       const status = document.getElementById('statusMsg');
       const results = document.getElementById('results');
-
       currentDomain = domain;
       offset = 0;
-
       status.textContent = 'Searching...';
       results.innerHTML = '';
       document.getElementById('loadMoreBtn').style.display = 'none';
-
       if (currentUser) {
         if (currentMeta.searches_remaining <= 0) {
           status.textContent = 'No searches left.';
@@ -330,28 +258,21 @@
         }
         await updateCredits(currentMeta.searches_remaining - 1, currentMeta.reveals_remaining);
       }
-
       const resp = await fetch(
         `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
       );
       const data = await resp.json();
-
       const emails = data.data?.emails || [];
       totalResults = data.meta?.results || emails.length;
-
       const shown = emails.length;
       status.textContent = `Showing ${shown} of ${totalResults} contacts`;
-
       renderResults(emails, domain);
-
       if (shown < totalResults) {
         document.getElementById('loadMoreBtn').style.display = 'block';
       }
     });
-
     refreshUser();
   </script>
-
   <!-- ⭐ ADDED FOOTER -->
   <footer style="
     text-align:center;
@@ -361,11 +282,10 @@
     border-top:1px solid #e5e7eb;
     margin-top:40px;
   ">
-    © 2026 NovaHunt.ai — 
+    © 2026 NovaHunt.ai —
     <a href="mailto:hello@novahunt.ai" style="color:#6b7280; text-decoration:none;">
       Contact
     </a>
   </footer>
-
 </body>
 </html>
