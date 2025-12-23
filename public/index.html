@@ -38,6 +38,7 @@
       opacity: 0.6;
       cursor: default;
     }
+    h3 { margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 700; }
     #loadMoreBtn {
       display: none;
       margin: 20px auto;
@@ -47,36 +48,6 @@
       border: none;
       font-weight: 600;
       cursor: pointer;
-    }
-
-    /* Department collapsible styling — improved layout */
-    .dept-header {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 32px 0 12px 0;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
-    .dept-name { font-weight: 700; }
-    .dept-count { font-size: 16px; font-weight: 500; color: #6b7280; margin-left: 8px; }
-    .dept-arrow { font-size: 18px; margin-left: 12px; transition: transform 0.2s; }
-    .dept-arrow.open { transform: rotate(180deg); }
-    .dept-content { display: none; }
-    .dept-content.open { display: block; }
-
-    /* Mobile fix */
-    @media (max-width: 640px) {
-      .brand { font-size: 48px !important; }
-      .lead { font-size: 20px !important; }
-      input[type="text"] { font-size: 18px !important; padding: 20px !important; }
-      .cta { font-size: 16px !important; padding: 14px 24px !important; }
-      .domain-form, .results-wrap { max-width: 100% !important; padding: 0 10px; }
-      .actions-row { flex-direction: column; gap: 12px; }
-      .page-root { padding: 40px 10px; }
-      body { overflow-x: hidden; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -101,7 +72,6 @@
     <button id="loadMoreBtn">Load More</button>
   </main>
   <script>
-    const HUNTER_API_KEY = "b2eb114113547c1eeb296f358fb10653acc0727a";
     const PAGE_SIZE = 100;
     const client = window.supabase.createClient(
       'https://zusfblqrhqalgywcdvld.supabase.co',
@@ -112,24 +82,6 @@
     let offset = 0;
     let totalResults = 0;
     let currentDomain = '';
-
-    // Priority order: Executive first, Department unknown last
-    const deptOrder = [
-      'Executive',
-      'Management',
-      'Marketing',
-      'Sales',
-      'Operations',
-      'Design',
-      'Communication',
-      'Legal',
-      'Support',
-      'Department unknown'
-    ];
-
-    // Track departments and counts for dynamic updates
-    const deptData = {}; // { dept: { count: 0, content: element, header: element } }
-
     async function refreshUser() {
       const { data } = await client.auth.getUser();
       const authLink = document.getElementById('authLink');
@@ -161,7 +113,6 @@
       currentMeta.searches_remaining = searches;
       currentMeta.reveals_remaining = reveals;
     }
-
     async function updateCredits(newSearches, newReveals) {
       if (!currentUser) return;
       const { data } = await client.auth.updateUser({
@@ -174,7 +125,6 @@
       document.getElementById('creditsBanner').innerHTML =
         `Plan: <b>${currentMeta.plan}</b> · Searches left: <b>${currentMeta.searches_remaining}</b> · Reveals left: <b>${currentMeta.reveals_remaining}</b>`;
     }
-
     function renderSingleResult(e, container, domain) {
       const fullEmail = e.value || '';
       const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Unknown';
@@ -256,98 +206,21 @@
       card.appendChild(actions);
       container.appendChild(card);
     }
-
-    function renderResults(emails, domain, isLoadMore = false) {
+    function renderResults(emails, domain) {
       const container = document.getElementById('results');
-      if (!isLoadMore) {
-        container.innerHTML = '';
-        deptData = {};
-      }
-
-      // Group new emails by department
-      const newGroups = {};
+      const groups = {};
       emails.forEach(e => {
-        let dept = e.department || 'Department unknown';
-        dept = dept.charAt(0).toUpperCase() + dept.slice(1);
-        if (!newGroups[dept]) newGroups[dept] = [];
-        newGroups[dept].push(e);
+        const dept = e.department || 'Other';
+        if (!groups[dept]) groups[dept] = [];
+        groups[dept].push(e);
       });
-
-      // Sort departments by priority
-      const sortedDepts = Object.keys(newGroups).sort((a, b) => {
-        const indexA = deptOrder.indexOf(a);
-        const indexB = deptOrder.indexOf(b);
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
+      Object.keys(groups).forEach(dept => {
+        const header = document.createElement('h3');
+        header.textContent = dept.charAt(0).toUpperCase() + dept.slice(1);
+        container.appendChild(header);
+        groups[dept].forEach(e => renderSingleResult(e, container, domain));
       });
-
-      let first = Object.keys(deptData).length === 0; // Only first on initial load
-
-      sortedDepts.forEach(dept => {
-        let deptDiv = deptData[dept]?.div;
-        let header = deptData[dept]?.header;
-        let content = deptData[dept]?.content;
-        let countSpan = deptData[dept]?.countSpan;
-
-        if (!deptDiv) {
-          deptDiv = document.createElement('div');
-          deptDiv.className = 'dept-section';
-
-          header = document.createElement('div');
-          header.className = 'dept-header';
-
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'dept-name';
-          nameSpan.textContent = dept;
-
-          countSpan = document.createElement('span');
-          countSpan.className = 'dept-count';
-          countSpan.textContent = `(0)`;
-
-          const arrow = document.createElement('span');
-          arrow.className = 'dept-arrow';
-          arrow.textContent = first ? '▲' : '▼';
-
-          header.appendChild(nameSpan);
-          header.appendChild(countSpan);
-          header.appendChild(arrow);
-
-          content = document.createElement('div');
-          content.className = 'dept-content';
-          if (first) content.classList.add('open');
-          first = false;
-
-          header.onclick = () => {
-            content.classList.toggle('open');
-            arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
-          };
-
-          deptDiv.appendChild(header);
-          deptDiv.appendChild(content);
-          container.appendChild(deptDiv);
-
-          deptData[dept] = { div: deptDiv, header, content, countSpan, count: 0 };
-        } else {
-          countSpan = deptData[dept].countSpan;
-        }
-
-        // Append new emails
-        newGroups[dept].forEach(e => renderSingleResult(e, content, domain));
-
-        // Update count
-        deptData[dept].count += newGroups[dept].length;
-        countSpan.textContent = `(${deptData[dept].count})`;
-      });
-
-      // Update status
-      const shown = document.querySelectorAll('.result-card').length;
-      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
-
-      // Show/hide Load More
-      document.getElementById('loadMoreBtn').style.display = shown < totalResults ? 'block' : 'none';
     }
-
     async function loadMore() {
       if (!currentUser) {
         alert('Sign up or log in to load more results.');
@@ -355,15 +228,22 @@
       }
       offset += PAGE_SIZE;
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${HUNTER_API_KEY}`
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}`
       );
+      if (!resp.ok) {
+        document.getElementById('statusMsg').textContent = 'Search failed — API key required.';
+        return;
+      }
       const data = await resp.json();
       const emails = data.data?.emails || [];
-      renderResults(emails, currentDomain, true); // true = isLoadMore
+      renderResults(emails, currentDomain);
+      const shown = document.querySelectorAll('.result-card').length;
+      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
+      if (shown >= totalResults || !emails.length) {
+        document.getElementById('loadMoreBtn').style.display = 'none';
+      }
     }
-
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
-
     document.getElementById('searchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const domain = document.getElementById('domainInput').value.trim();
@@ -382,13 +262,22 @@
         await updateCredits(currentMeta.searches_remaining - 1, currentMeta.reveals_remaining);
       }
       const resp = await fetch(
-  `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}`
-);
-if (!resp.ok) {
-  status.textContent = 'Search temporarily unavailable — Hunter.io API key required for full results.';
-  return;
-});
-
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}`
+      );
+      if (!resp.ok) {
+        status.textContent = 'Search temporarily unavailable — Hunter.io API key required.';
+        return;
+      }
+      const data = await resp.json();
+      const emails = data.data?.emails || [];
+      totalResults = data.meta?.results || emails.length;
+      const shown = emails.length;
+      status.textContent = `Showing ${shown} of ${totalResults} contacts`;
+      renderResults(emails, domain);
+      if (shown < totalResults) {
+        document.getElementById('loadMoreBtn').style.display = 'block';
+      }
+    });
     refreshUser();
   </script>
   <!-- ⭐ ADDED FOOTER -->
