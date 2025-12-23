@@ -84,7 +84,8 @@
       cursor: pointer;
     }
 
-    button.secondary {
+    button.secondary,
+    a.secondary {
       padding: 8px 14px;
       border-radius: 999px;
       border: 1px solid #d1d5db;
@@ -92,6 +93,9 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      text-decoration: none;
+      color: #111827;
+      display: inline-block;
     }
 
     table {
@@ -147,7 +151,11 @@
           <span class="label">Plan:</span>
           <span class="value" id="planValue">—</span>
         </div>
-        <a href="/plans.html" class="secondary" id="upgradeBtn">Upgrade Plan</a>
+        <div>
+          <a href="/plans.html" class="secondary" id="upgradeBtn">Upgrade Plan</a>
+          <!-- NEW: Cancel button -->
+          <button class="secondary" id="cancelBtn" style="margin-left:8px;">Cancel Subscription</button>
+        </div>
       </div>
       <div class="row">
         <div>
@@ -218,6 +226,14 @@
 
       document.getElementById('upgradeBtn').style.display = plan === 'Enterprise' ? 'none' : 'inline-block';
 
+      // NEW: show/hide Cancel button based on plan + presence of stripe_customer_id
+      const cancelBtn = document.getElementById('cancelBtn');
+      if (plan === 'Free' || !currentMeta.stripe_customer_id) {
+        cancelBtn.style.display = 'none';
+      } else {
+        cancelBtn.style.display = 'inline-block';
+      }
+
       renderSavedContacts();
     }
 
@@ -286,10 +302,41 @@
       window.location.href = '/';
     };
 
+    // NEW: Cancel subscription handler
+    document.getElementById('cancelBtn').onclick = async () => {
+      if (!currentMeta || !currentMeta.stripe_customer_id) {
+        alert("No Stripe subscription found for this account.");
+        return;
+      }
+
+      if (!confirm("Are you sure you want to cancel your subscription? You will keep access until the end of the billing period.")) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/cancel-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_id: currentMeta.stripe_customer_id })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert("Your subscription has been canceled. You will keep access until the end of the billing period.");
+          window.location.reload();
+        } else {
+          alert("Error canceling subscription: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Network error canceling subscription.");
+      }
+    };
+
     loadAccount();
   </script>
 
-  <!-- ⭐ ADDED FOOTER -->
+  <!-- Footer -->
   <footer style="
     text-align:center;
     padding:20px 0;
