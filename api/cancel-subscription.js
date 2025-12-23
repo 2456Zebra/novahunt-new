@@ -1,48 +1,59 @@
-const Stripe = require("stripe");
+// api/cancel-subscription.js
+// Vercel serverless function to cancel a Stripe subscription
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import Stripe from 'stripe';
 
-module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ success: false, error: "Method not allowed" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-09-30', // Match your Stripe version
+});
+
+export default async function handler(req, res) {
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const { customer_id } = req.body;
+
+  if (!customer_id) {
+    return res.status(400).json({ error: 'Missing customer_id' });
   }
 
   try {
-    const { customer_id } = req.body || {};
-
-    if (!customer_id) {
-      return res.status(400).json({ success: false, error: "Missing customer_id" });
-    }
-
-    // 1. Find active subscription for this customer
-    const subs = await stripe.subscriptions.list({
+    // Find active subscriptions for the customer
+    const subscriptions = await stripe.subscriptions.list({
       customer: customer_id,
-      status: "active",
-      limit: 1
+      status: 'active',
+      limit: 1, // Assume one active sub per user
     });
 
-    if (!subs.data.length) {
-      return res.status(400).json({ success: false, error: "No active subscription found" });
+    if (subscriptions.data.length === 0) {
+      return res.status(404).json({ error: 'No active subscription found' });
     }
 
-    const subscription = subs.data[0];
+    const subscription = subscriptions.data[0];
 
-    // 2. Cancel at period end (safer than immediate deletion)
-    const updated = await stripe.subscriptions.update(subscription.id, {
-      cancel_at_period_end: true
+    // Cancel at period end (user keeps access until end of billing cycle)
+    await stripe.subscriptions.update(subscription.id, {
+      cancel_at_period_end: true,
     });
 
-    return res.status(200).json({
-      success: true,
-      subscription: {
-        id: updated.id,
-        cancel_at_period_end: updated.cancel_at_period_end,
-        current_period_end: updated.current_period_end
-      }
+    // Optional: Update your Supabase user metadata (e.g., mark as canceling)
+    // You can add Supabase admin call here if needed
+
+    return res.status(200).json({ success: true, message: 'Subscription canceled at period end' });
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to cancel subscription', 
+      details: error.message || 'Unknown error' 
     });
-  } catch (err) {
-    console.error("Error canceling subscription:", err);
-    return res.status(500).json({ success: false, error: err.message || "Server error" });
   }
+}
+
+// For Next.js compatibility (if using older format)
+export const config = {
+  api: {
+    bodyParser: true,
+  },
 };
