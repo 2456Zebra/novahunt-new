@@ -38,7 +38,6 @@
       opacity: 0.6;
       cursor: default;
     }
-    h3 { margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 700; }
     #loadMoreBtn {
       display: none;
       margin: 20px auto;
@@ -50,7 +49,25 @@
       cursor: pointer;
     }
 
-    /* Mobile-only fix — does NOT affect desktop/laptop */
+    /* New: Department collapsible styling */
+    .dept-header {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 32px 0 12px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dept-name { font-weight: 700; }
+    .dept-count { font-weight: 500; color: #6b7280; margin-left: 8px; }
+    .dept-arrow { font-size: 18px; margin-left: 8px; transition: transform 0.2s; }
+    .dept-arrow.open { transform: rotate(180deg); }
+    .dept-content { display: none; }
+    .dept-content.open { display: block; }
+
+    /* Mobile fix (already added previously) */
     @media (max-width: 640px) {
       .brand { font-size: 48px !important; }
       .lead { font-size: 20px !important; }
@@ -95,6 +112,21 @@
     let offset = 0;
     let totalResults = 0;
     let currentDomain = '';
+
+    // Department priority order (Executive first, Department unknown last)
+    const deptOrder = [
+      'Executive',
+      'Management',
+      'Marketing',
+      'Sales',
+      'Operations',
+      'Design',
+      'Communication',
+      'Legal',
+      'Support',
+      'Department unknown'
+    ];
+
     async function refreshUser() {
       const { data } = await client.auth.getUser();
       const authLink = document.getElementById('authLink');
@@ -126,6 +158,7 @@
       currentMeta.searches_remaining = searches;
       currentMeta.reveals_remaining = reveals;
     }
+
     async function updateCredits(newSearches, newReveals) {
       if (!currentUser) return;
       const { data } = await client.auth.updateUser({
@@ -138,6 +171,7 @@
       document.getElementById('creditsBanner').innerHTML =
         `Plan: <b>${currentMeta.plan}</b> · Searches left: <b>${currentMeta.searches_remaining}</b> · Reveals left: <b>${currentMeta.reveals_remaining}</b>`;
     }
+
     function renderSingleResult(e, container, domain) {
       const fullEmail = e.value || '';
       const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Unknown';
@@ -219,21 +253,61 @@
       card.appendChild(actions);
       container.appendChild(card);
     }
+
     function renderResults(emails, domain) {
       const container = document.getElementById('results');
+      container.innerHTML = '';
+
+      // Group by department
       const groups = {};
       emails.forEach(e => {
-        const dept = e.department || 'Other';
+        let dept = e.department || 'Department unknown';
+        dept = dept.charAt(0).toUpperCase() + dept.slice(1);
         if (!groups[dept]) groups[dept] = [];
         groups[dept].push(e);
       });
-      Object.keys(groups).forEach(dept => {
-        const header = document.createElement('h3');
-        header.textContent = dept.charAt(0).toUpperCase() + dept.slice(1);
-        container.appendChild(header);
-        groups[dept].forEach(e => renderSingleResult(e, container, domain));
+
+      // Sort departments by priority order
+      const sortedDepts = Object.keys(groups).sort((a, b) => {
+        const indexA = deptOrder.indexOf(a);
+        const indexB = deptOrder.indexOf(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
+      let first = true;
+      sortedDepts.forEach(dept => {
+        const deptDiv = document.createElement('div');
+        deptDiv.className = 'dept-section';
+
+        const header = document.createElement('div');
+        header.className = 'dept-header';
+        header.innerHTML = `
+          <span class="dept-name">${dept}</span>
+          <span class="dept-count">(${groups[dept].length})</span>
+          <span class="dept-arrow">${first ? '▲' : '▼'}</span>
+        `;
+
+        const content = document.createElement('div');
+        content.className = 'dept-content';
+        if (first) content.classList.add('open');
+        first = false;
+
+        groups[dept].forEach(e => renderSingleResult(e, content, domain));
+
+        header.onclick = () => {
+          content.classList.toggle('open');
+          const arrow = header.querySelector('.dept-arrow');
+          arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
+        };
+
+        deptDiv.appendChild(header);
+        deptDiv.appendChild(content);
+        container.appendChild(deptDiv);
       });
     }
+
     async function loadMore() {
       if (!currentUser) {
         alert('Sign up or log in to load more results.');
@@ -241,7 +315,7 @@
       }
       offset += PAGE_SIZE;
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(currentDomain)}&offset=${offset}&limit=${PAGE_SIZE}&api_key=${HUNTER_API_KEY}`
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
@@ -252,7 +326,9 @@
         document.getElementById('loadMoreBtn').style.display = 'none';
       }
     }
+
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
+
     document.getElementById('searchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const domain = document.getElementById('domainInput').value.trim();
@@ -271,7 +347,7 @@
         await updateCredits(currentMeta.searches_remaining - 1, currentMeta.reveals_remaining);
       }
       const resp = await fetch(
-        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}&api_key=${"b2eb114113547c1eeb296f358fb10653acc0727a"}`
+        `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&offset=0&limit=${PAGE_SIZE}&api_key=${HUNTER_API_KEY}`
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
@@ -283,6 +359,7 @@
         document.getElementById('loadMoreBtn').style.display = 'block';
       }
     });
+
     refreshUser();
   </script>
   <!-- ⭐ ADDED FOOTER -->
