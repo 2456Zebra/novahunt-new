@@ -48,12 +48,11 @@
       font-weight: 600;
       cursor: pointer;
     }
-
-    /* Department collapsible styling - improved layout */
+    /* Department collapsible styling - improved layout as requested */
     .dept-header {
       font-size: 20px;
       font-weight: 700;
-      margin: 32px 0 12px 0;
+      margin: 32px 0 12px;
       cursor: pointer;
       user-select: none;
       display: flex;
@@ -66,8 +65,7 @@
     .dept-arrow.open { transform: rotate(180deg); }
     .dept-content { display: none; }
     .dept-content.open { display: block; }
-
-    /* Mobile fix */
+    /* Mobile fix (already added previously) */
     @media (max-width: 640px) {
       .brand { font-size: 48px !important; }
       .lead { font-size: 20px !important; }
@@ -112,8 +110,7 @@
     let offset = 0;
     let totalResults = 0;
     let currentDomain = '';
-
-    // Priority order: Executive first, Department unknown last
+    // Department priority order (Executive first, Department unknown last)
     const deptOrder = [
       'Executive',
       'Management',
@@ -126,10 +123,6 @@
       'Support',
       'Department unknown'
     ];
-
-    // Track departments for dynamic Load More
-    const deptData = {};
-
     async function refreshUser() {
       const { data } = await client.auth.getUser();
       const authLink = document.getElementById('authLink');
@@ -161,7 +154,6 @@
       currentMeta.searches_remaining = searches;
       currentMeta.reveals_remaining = reveals;
     }
-
     async function updateCredits(newSearches, newReveals) {
       if (!currentUser) return;
       const { data } = await client.auth.updateUser({
@@ -174,7 +166,6 @@
       document.getElementById('creditsBanner').innerHTML =
         `Plan: <b>${currentMeta.plan}</b> · Searches left: <b>${currentMeta.searches_remaining}</b> · Reveals left: <b>${currentMeta.reveals_remaining}</b>`;
     }
-
     function renderSingleResult(e, container, domain) {
       const fullEmail = e.value || '';
       const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Unknown';
@@ -256,89 +247,51 @@
       card.appendChild(actions);
       container.appendChild(card);
     }
-
-    function renderResults(emails, domain, isLoadMore = false) {
+    function renderResults(emails, domain) {
       const container = document.getElementById('results');
-      if (!isLoadMore) {
-        container.innerHTML = '';
-        deptData = {};
-      }
-
-      const newGroups = {};
+      container.innerHTML = '';
+      // Group by department
+      const groups = {};
       emails.forEach(e => {
         let dept = e.department || 'Department unknown';
         dept = dept.charAt(0).toUpperCase() + dept.slice(1);
-        if (!newGroups[dept]) newGroups[dept] = [];
-        newGroups[dept].push(e);
+        if (!groups[dept]) groups[dept] = [];
+        groups[dept].push(e);
       });
-
-      const sortedDepts = Object.keys(newGroups).sort((a, b) => {
+      // Sort departments by priority order
+      const sortedDepts = Object.keys(groups).sort((a, b) => {
         const indexA = deptOrder.indexOf(a);
         const indexB = deptOrder.indexOf(b);
-        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
       });
-
-      let first = Object.keys(deptData).length === 0;
-
+      let first = true;
       sortedDepts.forEach(dept => {
-        let deptDiv = deptData[dept]?.div;
-        let header = deptData[dept]?.header;
-        let content = deptData[dept]?.content;
-        let countSpan = deptData[dept]?.countSpan;
-
-        if (!deptDiv) {
-          deptDiv = document.createElement('div');
-
-          header = document.createElement('div');
-          header.className = 'dept-header';
-
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'dept-name';
-          nameSpan.textContent = dept;
-
-          countSpan = document.createElement('span');
-          countSpan.className = 'dept-count';
-          countSpan.textContent = `(0)`;
-
-          const arrow = document.createElement('span');
-          arrow.className = 'dept-arrow';
-          arrow.textContent = first ? '▲' : '▼';
-
-          header.appendChild(nameSpan);
-          header.appendChild(countSpan);
-          header.appendChild(arrow);
-
-          content = document.createElement('div');
-          content.className = 'dept-content';
-          if (first) content.classList.add('open');
-
-          header.onclick = () => {
-            content.classList.toggle('open');
-            arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
-          };
-
-          deptDiv.appendChild(header);
-          deptDiv.appendChild(content);
-          container.appendChild(deptDiv);
-
-          deptData[dept] = { div: deptDiv, header, content, countSpan, count: 0 };
-        } else {
-          countSpan = deptData[dept].countSpan;
-        }
-
-        newGroups[dept].forEach(e => renderSingleResult(e, content, domain));
-
-        deptData[dept].count += newGroups[dept].length;
-        countSpan.textContent = `(${deptData[dept].count})`;
-
+        const deptDiv = document.createElement('div');
+        deptDiv.className = 'dept-section';
+        const header = document.createElement('div');
+        header.className = 'dept-header';
+        header.innerHTML = `
+          <span class="dept-name">${dept}</span>
+          <span class="dept-count">(${groups[dept].length})</span>
+          <span class="dept-arrow">${first ? '▲' : '▼'}</span>
+        `;
+        const content = document.createElement('div');
+        content.className = 'dept-content';
+        if (first) content.classList.add('open');
         first = false;
+        groups[dept].forEach(e => renderSingleResult(e, content, domain));
+        header.onclick = () => {
+          content.classList.toggle('open');
+          const arrow = header.querySelector('.dept-arrow');
+          arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
+        };
+        deptDiv.appendChild(header);
+        deptDiv.appendChild(content);
+        container.appendChild(deptDiv);
       });
-
-      const shown = document.querySelectorAll('.result-card').length;
-      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
-      document.getElementById('loadMoreBtn').style.display = shown < totalResults ? 'block' : 'none';
     }
-
     async function loadMore() {
       if (!currentUser) {
         alert('Sign up or log in to load more results.');
@@ -350,11 +303,14 @@
       );
       const data = await resp.json();
       const emails = data.data?.emails || [];
-      renderResults(emails, currentDomain, true);
+      renderResults(emails, currentDomain);
+      const shown = document.querySelectorAll('.result-card').length;
+      document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
+      if (shown >= totalResults || !emails.length) {
+        document.getElementById('loadMoreBtn').style.display = 'none';
+      }
     }
-
     document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
-
     document.getElementById('searchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const domain = document.getElementById('domainInput').value.trim();
@@ -378,29 +334,19 @@
       const data = await resp.json();
       const emails = data.data?.emails || [];
       totalResults = data.meta?.results || emails.length;
-      renderResults(emails, domain);
       const shown = emails.length;
       status.textContent = `Showing ${shown} of ${totalResults} contacts`;
+      renderResults(emails, domain);
       if (shown < totalResults) {
         document.getElementById('loadMoreBtn').style.display = 'block';
       }
     });
-
     refreshUser();
   </script>
   <!-- ⭐ ADDED FOOTER -->
   <footer style="
-    text-align:center;
-    padding:20px 0;
-    font-size:14px;
-    color:#6b7280;
-    border-top:1px solid #e5e7eb;
-    margin-top:40px;
-  ">
-    © 2026 NovaHunt.ai —
-    <a href="mailto:hello@novahunt.ai" style="color:#6b7280; text-decoration:none;">
-      Contact
-    </a>
+    text-align:center; padding:20px 0; font-size:14px; color:#6b7280; border-top:1px solid #e5e7eb; margin-top:40px; ">
+    © 2026 NovaHunt.ai — <a href="mailto:hello@novahunt.ai" style="color:#6b7280; text-decoration:none;"> Contact </a>
   </footer>
 </body>
 </html>
