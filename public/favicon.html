@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NovaHunt Combined Animation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #f3f4f6;
+      font-family: "Inter", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .logo-box {
+      width: 180px;
+      height: 180px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 600px;
+    }
+
+    .logo {
+      font-family: "Inter", sans-serif;
+      font-weight: 800;
+      font-size: 165px; /* MAX size without clipping */
+      line-height: 1;
+      color: black;
+      transform-origin: center center;
+      transform-style: preserve-3d;
+
+      /* This is the combined animation */
+      animation: pulseflip 22s ease-in-out infinite;
+    }
+
+    /* ------------------------------------------------------------- */
+    /* COMBINED FAST PULSE + FLIP LOOP                               */
+    /* ------------------------------------------------------------- */
+    @keyframes pulseflip {
+
+      /* 0–45%: FAST PULSE (10 seconds) */
+      0%   { transform: scale(1.00) rotateY(0deg); }
+      5%   { transform: scale(0.88) rotateY(0deg); }
+      10%  { transform: scale(1.00) rotateY(0deg); }
+
+      15%  { transform: scale(0.88) rotateY(0deg); }
+      20%  { transform: scale(1.00) rotateY(0deg); }
+
+      25%  { transform: scale(0.88) rotateY(0deg); }
+      30%  { transform: scale(1.00) rotateY(0deg); }
+
+      35%  { transform: scale(0.88) rotateY(0deg); }
+      40%  { transform: scale(1.00) rotateY(0deg); }
+
+      45%  { transform: scale(1.00) rotateY(0deg); }
+
+      /* 45–55%: FLIP 2–3 TIMES (2 seconds) */
+      50%  { transform: scale(1.00) rotateY(360deg); }
+      55%  { transform: scale(1.00) rotateY(720deg); }
+
+      /* 55–100%: FAST PULSE AGAIN (10 seconds) */
+      60%  { transform: scale(0.88) rotateY(720deg); }
+      65%  { transform: scale(1.00) rotateY(720deg); }
+
+      70%  { transform: scale(0.88) rotateY(720deg); }
+      75%  { transform: scale(1.00) rotateY(720deg); }
+
+      80%  { transform: scale(0.88) rotateY(720deg); }
+      85%  { transform: scale(1.00) rotateY(720deg); }
+
+      90%  { transform: scale(0.88) rotateY(720deg); }
+      95%  { transform: scale(1.00) rotateY(720deg); }
+
+      100% { transform: scale(1.00) rotateY(720deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>NovaHunt Combined Animation</h1>
+
+  <div class="logo-box">
+    <span class="logo">N</span>
+  </div>
+
+</body>
+</html>
