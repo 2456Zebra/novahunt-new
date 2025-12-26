@@ -1,44 +1,24 @@
 import Stripe from 'stripe';
+import { buffer } from 'micro';
 import { createClient } from '@supabase/supabase-js';
 
-// Vercel config: disable default body parsing (we need the raw body for Stripe)
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Stripe requires raw body
   },
 };
 
-// --- Environment variables (must be set in Vercel) ---
+// --- Environment variables ---
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!stripeSecretKey) console.error('❌ Missing STRIPE_SECRET_KEY');
-if (!stripeWebhookSecret) console.error('❌ Missing STRIPE_WEBHOOK_SECRET');
-if (!supabaseUrl) console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL');
-if (!supabaseServiceRoleKey) console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY');
-
-const stripe = new Stripe(stripeSecretKey || '', {
-  // If Stripe complains about version, you can remove apiVersion or set to your dashboard version
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2024-06-20',
 });
 
-const supabase = createClient(supabaseUrl || '', supabaseServiceRoleKey || '');
-
-// Read raw body from Vercel serverless request (no micro)
-async function readRawBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => {
-      data += chunk;
-    });
-    req.on('end', () => {
-      resolve(Buffer.from(data));
-    });
-    req.on('error', reject);
-  });
-}
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // Map plan → credits
 function getCreditsForPlan(plan) {
@@ -59,33 +39,33 @@ export default async function handler(req, res) {
   let event;
 
   try {
-    const rawBody = await readRawBody(req);
+    const rawBody = await buffer(req);
     const signature = req.headers['stripe-signature'];
 
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      stripeWebhookSecret || ''
+      stripeWebhookSecret
     );
   } catch (err) {
     console.error('❌ Stripe signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // We only care about checkout.session.completed right now
+  // --- Handle checkout completion ---
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
     const email = session.customer_details?.email;
-    const customerId = session.customer; // Stripe customer ID
-    const plan = session.metadata?.plan || 'Pro'; // in your current flow, metadata is empty, so Pro fallback
+    const customerId = session.customer;
+    const plan = session.metadata?.plan || 'Pro';
 
     if (!email) {
-      console.error('❌ Missing customer email in checkout.session.completed');
-      return res.status(400).json({ error: 'Missing customer email' });
+      console.error('❌ Missing customer email');
+      return res.status(200).json({ received: true }); // Always 200 for Stripe
     }
 
-    console.log('🔔 checkout.session.completed:', {
+    console.log('🔔 checkout.session.completed', {
       email,
       plan,
       customerId,
@@ -95,80 +75,67 @@ export default async function handler(req, res) {
     const selected = getCreditsForPlan(plan);
 
     try {
-      // 1) Fetch users (simple approach for small user counts)
-      const { data: usersPage, error: listError } =
-        await supabase.auth.admin.listUsers();
+      // --- Direct lookup instead of listUsers() ---
+      const { data: existingUser, error: lookupError } =
+        await supabase
+          .from('auth.users')
+          .select('*')
+          .eq('email', email)
+          .single();
 
-      if (listError) {
-        console.error('❌ Supabase listUsers error:', listError);
-        return res.status(500).json({ error: 'Supabase listUsers error' });
+      if (lookupError && lookupError.code !== 'PGRST116') {
+        console.error('❌ Supabase lookup error:', lookupError);
       }
 
-      const existingUser =
-        usersPage?.users?.find(
-          (u) => u.email && u.email.toLowerCase() === email.toLowerCase()
-        ) || null;
-
+      // --- Update existing user ---
       if (existingUser) {
-        // --- Update existing user ---
-        console.log('🔄 Updating existing Supabase user:', existingUser.id);
+        console.log('🔄 Updating existing user:', existingUser.id);
 
-        const currentMeta = existingUser.user_metadata || {};
+        const { error: updateError } =
+          await supabase.auth.admin.updateUserById(existingUser.id, {
+            user_metadata: {
+              ...existingUser.user_metadata,
+              plan,
+              stripe_customer_id: customerId,
+              searches_remaining: selected.searches,
+              reveals_remaining: selected.reveals,
+            },
+          });
 
-        const newMeta = {
-          ...currentMeta,
+        if (updateError) {
+          console.error('❌ Supabase update error:', updateError);
+        }
+
+        return res.status(200).json({ received: true });
+      }
+
+      // --- Create new user ---
+      console.log('➕ Creating new user:', email);
+
+      const { error: createError } = await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        password: session.id, // temporary
+        user_metadata: {
           plan,
           stripe_customer_id: customerId,
           searches_remaining: selected.searches,
           reveals_remaining: selected.reveals,
-        };
-
-        const { error: updateError } = await supabase.auth.admin.updateUserById(
-          existingUser.id,
-          {
-            user_metadata: newMeta,
-          }
-        );
-
-        if (updateError) {
-          console.error('❌ Supabase updateUserById error:', updateError);
-          return res.status(500).json({ error: 'Supabase update error' });
-        }
-
-        console.log('✅ Updated Supabase user:', existingUser.id);
-        return res.status(200).json({ received: true });
-      }
-
-      // --- No existing user → create one ---
-      console.log('➕ Creating new Supabase user for:', email);
-
-      const { data: createdUser, error: createError } =
-        await supabase.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          password: session.id, // temp password; user can reset later
-          user_metadata: {
-            plan,
-            stripe_customer_id: customerId,
-            searches_remaining: selected.searches,
-            reveals_remaining: selected.reveals,
-            saved_contacts: [],
-          },
-        });
+          saved_contacts: [],
+        },
+      });
 
       if (createError) {
-        console.error('❌ Supabase createUser error:', createError);
-        return res.status(500).json({ error: 'Supabase create error' });
+        console.error('❌ Supabase create error:', createError);
       }
 
-      console.log('✅ Created Supabase user:', createdUser.id);
       return res.status(200).json({ received: true });
     } catch (err) {
-      console.error('❌ Unexpected error in webhook handler:', err);
-      return res.status(500).json({ error: 'Internal webhook error' });
+      console.error('❌ Unexpected webhook error:', err);
+      return res.status(200).json({ received: true }); // Stripe must always get 200
     }
   }
 
-  // For all other event types, just acknowledge
+  // Acknowledge all other events
   return res.status(200).json({ received: true });
 }
