@@ -76,6 +76,35 @@
       .page-root { padding: 40px 10px; }
       body { overflow-x: hidden; }
     }
+    /* Premium focus glow */
+#domainInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Icon wrapper */
+.input-icon-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+/* Make room for the icon */
+#domainInput {
+  padding-left: 54px;
+}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
