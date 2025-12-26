@@ -114,7 +114,19 @@
     <h1 class="brand">NovaHunt.ai</h1>
     <p class="lead">Find business emails instantly. Enter a company domain and get professional contacts.</p>
     <form class="domain-form" id="searchForm">
-      <input id="domainInput" type="text" placeholder="Enter company domain" required />
+      <div class="input-icon-wrapper">
+  <span class="input-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="#007bff" stroke-width="2"/>
+      <path d="M2 12h20" stroke="#007bff" stroke-width="2"/>
+      <path d="M12 2c3 4 3 16 0 20" stroke="#007bff" stroke-width="2"/>
+      <path d="M12 2c-3 4-3 16 0 20" stroke="#007bff" stroke-width="2"/>
+    </svg>
+  </span>
+
+  <input id="domainInput" type="text" placeholder="Enter company domain" required />
+</div>
+
       <div class="actions-row">
         <button type="submit" class="cta">New Search</button>
         <a href="/plans.html" class="cta" id="plansButton">View Plans & Pricing</a>
