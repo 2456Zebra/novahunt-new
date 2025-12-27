@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaHunt.ai – For Creators Who Want to Be Seen</title>
+
+<style>
+:root {
+  --bg-dark: #050816;
+  --bg-deep: #0d0f1a;
+  --accent-pink: #ff8ad8;
+  --accent-purple: #7b5cff;
+  --accent-blue: #3aa9ff;
+  --accent-teal: #22d6c5;
+  --accent-yellow: #ffd66b;
+  --accent-peach: #ffb6a0;
+  --text-main: #111111;
+  --text-muted: #4b4b4b;
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --shadow-soft: 0 18px 45px rgba(10, 14, 40, 0.25);
+}
+
+/* GLOBAL */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-main);
+  background: #f8f9ff;
+}
+
+section {
+  padding: 80px 20px;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* TYPOGRAPHY */
+h1, h2 {
+  margin: 0 0 20px 0;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 3.2vw + 1.6rem, 3.6rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 2.4vw + 1.4rem, 2.7rem);
+}
+
+p {
+  margin: 0 0 18px 0;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+p.muted {
+  color: var(--text-muted);
+}
+
+/* CTA */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  color: #050816;
+  font-weight: 600;
+  font-size: 0.98rem;
+  text-decoration: none;
+  box-shadow: 0 16px 40px rgba(40, 22, 110, 0.6);
+  cursor: pointer;
+}
+
+.btn-primary span.arrow {
+  font-size: 1.1rem;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #ffffff;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+/* HERO */
+.hero {
+  background: radial-gradient(circle at top left, #2c2a63, #050816 52%, #050816 100%);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hero-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hero-left,
+.hero-right {
+  flex: 1;
+}
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(10, 14, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.8rem;
+  color: #d7ddff;
+  margin-bottom: 18px;
+}
+
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-teal), var(--accent-yellow));
+}
+
+.hero p {
+  color: #dde2ff;
+}
+
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.hero-right-card {
+  background: rgba(9, 13, 40, 0.9);
+  border-radius: var(--radius-xl);
+  padding: 22px 22px 24px 22px;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(16, 21, 70, 0.9);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.78rem;
+  color: #cfd5ff;
+  margin-bottom: 14px;
+}
+
+.hero-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-teal);
+}
+
+.hero-domain {
+  font-size: 0.92rem;
+  color: #aeb4ff;
+  margin-bottom: 6px;
+}
+
+.hero-email {
+  font-size: 0.92rem;
+  color: #f6f4ff;
+}
+
+.hero-email-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #9fa6ff;
+  margin-bottom: 4px;
+}
+
+.hero-glow {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255,138,216,0.26), transparent 70%);
+  right: -60px;
+  bottom: -60px;
+}
+
+/* SECTION BASE STYLES */
+.section-block {
+  position: relative;
+  overflow: hidden;
+}
+
+.section-inner {
+  border-radius: var(--radius-xl);
+  padding: 56px 26px;
+}
+
+/* SECTION 2 – CREATOR PROBLEM */
+.section-problem {
+  background: linear-gradient(145deg, #fef3ff, #f3f5ff);
+}
+
+.section-problem .section-inner {
+  background: #ffffff;
+  box-shadow: 0 18px 60px rgba(40, 26, 120, 0.18);
+}
+
+/* SECTION 3 – MANIFESTO */
+.section-manifesto {
+  background: linear-gradient(135deg, #28124a, #120747);
+  color: #f4f0ff;
+}
+
+.section-manifesto .section-inner {
+  background: radial-gradient(circle at top left, #42298e, #140c3d 60%, #0b0924);
+  box-shadow: var(--shadow-soft);
+}
+
+.section-manifesto p,
+.section-manifesto .manifesto-line {
+  color: #e8e3ff;
+}
+
+.section-manifesto h2 {
+  color: #ffffff;
+}
+
+/* SECTION 4 – WHAT NOVAHUNT DOES */
+.section-what {
+  background: #f5f7ff;
+}
+
+.section-what .section-inner {
+  background: #ffffff;
+  box-shadow: 0 16px 55px rgba(29, 46, 97, 0.16);
+}
+
+/* SECTION 5 – WHY IT MATTERS */
+.section-why {
+  background: linear-gradient(135deg, #ffe9f1, #fff7de);
+}
+
+.section-why .section-inner {
+  background: linear-gradient(135deg, #fffdf7, #fff4ea);
+  box-shadow: 0 18px 55px rgba(180, 104, 50, 0.25);
+}
+
+/* SECTION 6 – MOMENTUM */
+.section-momentum {
+  background: linear-gradient(135deg, #0b1025, #161c3f);
+  color: #ffffff;
+}
+
+.section-momentum .section-inner {
+  background: linear-gradient(135deg, #151936, #14162a);
+  box-shadow: var(--shadow-soft);
+}
+
+.section-momentum p,
+.section-momentum h2 {
+  color: #e6e9ff;
+}
+
+.section-momentum p.muted {
+  color: #b8c0ff;
+}
+
+/* SECTION 7 – HOW CREATORS USE IT */
+.section-how {
+  background: #f3f6ff;
+}
+
+.section-how .section-inner {
+  background: #ffffff;
+  box-shadow: 0 14px 45px rgba(29, 46, 97, 0.15);
+}
+
+/* SECTION 8 – FINAL CTA */
+.section-final {
+  background: radial-gradient(circle at top, #343672, #050816 65%);
+  color: #ffffff;
+}
+
+.section-final .section-inner {
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+/* LAYOUT UTILITIES */
+.columns-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.badge-line {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #8a8fff;
+  margin-bottom: 16px;
+}
+
+/* MANIFESTO LINES */
+.manifesto-line {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* SIMPLE STEP LIST */
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.step-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #7f84ff;
+  margin-bottom: 4px;
+}
+
+.step-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* RESPONSIVE */
+@media (min-width: 880px) {
+  .hero-grid {
+    flex-direction: row;
+  }
+
+  .hero-inner {
+    padding: 10px 0;
+  }
+
+  .section-inner {
+    padding: 64px 56px;
+  }
+
+  .columns-2 {
+    flex-direction: row;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- SECTION 1 – HERO -->
+<section class="hero section-block">
+  <div class="container hero-inner">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <div class="hero-label">
+          <span class="hero-badge-dot"></span>
+          <span>Built for creators who pitch themselves</span>
+        </div>
+        <h1>Find the right inbox for your next brand deal.</h1>
+        <p>
+          NovaHunt helps creators discover publicly available professional emails tied to a brand’s domain —
+          so the next time you pitch, you’re not guessing where your message will land.
+        </p>
+        <div class="hero-cta-row">
+          <a href="index.html" class="btn-primary">
+            <span>Enter NovaHunt</span>
+            <span class="arrow">↗</span>
+          </a>
+          <a href="#problem" class="btn-ghost">
+            <span>Scroll the story</span>
+            <span>↓</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-right-card">
+          <div class="hero-pill">
+            <span class="hero-pill-dot"></span>
+            <span>Sample outreach moment</span>
+          </div>
+          <p class="hero-domain">Brand domain: <strong>nike.com</strong></p>
+          <p class="hero-email-label">Public professional contacts (example)</p>
+          <p class="hero-email">• partnerships@nike.com</p>
+          <p class="hero-email">• marketing@nike.com</p>
+          <p class="hero-email">• pr@nike.com</p>
+          <p class="hero-email-label" style="margin-top: 12px;">
+            Shown as an illustration of the type of professional emails NovaHunt can help you discover.
+          </p>
+          <div class="hero-glow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2 – THE CREATOR PROBLEM -->
+<section class="section-block section-problem" id="problem">
+  <div class="container">
+    <div class="section-inner">
+      <div class="badge-line">The creator problem</div>
+      <h2>It’s not that you can’t pitch. It’s that you don’t know who to pitch.</h2>
+      <p>
+        Every creator has lived this moment. You finally have a concept you’re proud of — a series, a launch,
+        a partnership idea that actually feels like you. You know which brands would be perfect for it.
+        You even know what you’d say if you were in the room.
+      </p>
+      <p class="muted">
+        But when it’s time to send the email, everything gets fuzzy.  
+        You’re hunting through websites, searching “brand + collab email,” asking friends, guessing at formats,
+        and hoping that “info@” somehow finds the right person.
+      </p>
+      <p>
+        It’s not a lack of talent. It’s not a lack of effort.  
+        It’s the simple fact that the path from “I have an idea” to “The right person saw it” is usually hidden.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3 – MANIFESTO / SHIFT -->
+<section class="section-block section-manifesto">
+  <div class="container">
+    <div class="section-inner">
+      <div class="badge-line" style="color:#ffcf89;">A different way to think about outreach</div>
+      <h2>Creators deserve clarity, not guesswork.</h2>
+      <p class="manifesto-line">
+        <strong>Your ideas shouldn’t disappear into generic inboxes.</strong>
+      </p>
+      <p class="manifesto-line">
+        <strong>Your outreach shouldn’t depend on having the “right connections.”</strong>
+      </p>
+      <p class="manifesto-line">
+        <strong>Your next collab shouldn’t rely on luck.</strong>
+      </p>
+      <p style="margin-top: 24px; color:#e3deff;">
+        NovaHunt was built around a simple belief: when creators know where to send their best ideas,
+        everything about outreach changes. The process feels calmer. The work feels more intentional.
+        And every pitch has a clearer shot at being seen by someone who can actually say “yes.”
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4 – WHAT NOVAHUNT DOES -->
+<section class="section-block section-what">
+  <div class="container">
+    <div class="section-inner">
+      <div class="columns-2">
+        <div>
+          <div class="badge-line" style="color:#7c61ff;">What NovaHunt actually does</div>
+          <h2>One domain in. A clearer view of who to reach.</h2>
+          <p>
+            NovaHunt helps you discover publicly available professional emails connected to a company’s domain.
+            You type in a brand’s website — the domain they use everywhere — and NovaHunt focuses on finding email
+            addresses that are relevant for outreach.
+          </p>
+          <p class="muted">
+            Instead of bouncing between search engines, social profiles, and random contact pages, you see a more
+            focused snapshot of the people behind the brand: marketing, partnerships, PR, and other teams that often
+            manage creator relationships.
+          </p>
+        </div>
+        <div>
+          <p class="step-label">The flow</p>
+          <div class="step-list">
+            <div>
+              <div class="step-title">1. Start with the brand you care about</div>
+              <p class="muted">
+                You bring the idea and the domain — the brands you genuinely want to work with.
+              </p>
+            </div>
+            <div>
+              <div class="step-title">2. See the professional emails NovaHunt finds</div>
+              <p class="muted">
+                NovaHunt surfaces publicly available email addresses tied to that domain,
+                highlighting those that look relevant for outreach.
+              </p>
+            </div>
+            <div>
+              <div class="step-title">3. Decide who to contact first</div>
+              <p class="muted">
+                Instead of guessing, you can choose the inbox that makes the most sense for your pitch —
+                and move forward with more confidence.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>      
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5 – WHY IT MATTERS (CREATOR BENEFITS) -->
+<section class="section-block section-why">
+  <div class="container">
+    <div class="section-inner">
+      <div class="badge-line" style="color:#d97722;">Why this matters for creators</div>
+      <h2>When you know who you’re emailing, everything about outreach feels different.</h2>
+      <p>
+        NovaHunt doesn’t write your pitch, negotiate your deal, or replace your creativity.
+        It does something quieter, but powerful: it makes the path to the right person feel clear.
+      </p>
+
+      <p class="muted">
+        Instead of sending one email into a generic address and walking away, you can treat outreach like a real practice.  
+        A list of brands. A list of contacts. A series of pitches sent with intention, not guesswork.
+      </p>
+
+     <p>
+  And when the path is clearer, the work feels lighter.  
+  You stop avoiding outreach.  
+  You stop overthinking every message.  
+  You start building momentum — one pitch at a time.
+</p>
+</div>
+</div>
+</section>
+
+<!-- SECTION 6 – MOMENTUM -->
+<section class="section-block section-momentum">
+  <div class="container">
+    <div class="section-inner">
+      <div class="badge-line" style="color:#5be2ff;">Momentum, not mystery</div>
+      <h2>Your outreach shouldn’t feel like shouting into the dark.</h2>
+
+      <p>
+        When every email feels like a guess, it’s easy to avoid reaching out at all.  
+        You delay. You overthink. You wait for “the perfect moment.”
+      </p>
+
+      <p style="color:#d5ddff;">
+        NovaHunt is designed to make outreach feel lighter.  
+        A simple search. A clearer list of professional emails.  
+        A next step that doesn’t feel overwhelming.
+      </p>
+
+      <p class="muted" style="color:#aab5ff;">
+        With a repeatable way to find who to reach out to, outreach becomes something you can do every week —
+        not once in a while when you finally work up the nerve.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7 – HOW CREATORS USE IT -->
+<section class="section-block section-how">
+  <div class="container">
+    <div class="section-inner">
+      <div class="columns-2">
+        <div>
+          <div class="badge-line" style="color:#7f61ff;">How creators actually use NovaHunt</div>
+          <h2>From vague “someday” ideas to a clear outreach list.</h2>
+          <p>
+            Most creators don’t need more tools. They need a cleaner path.  
+            NovaHunt fits into whatever system you already use — your email, your notes app, your spreadsheet, your CRM —
+            by doing one job well: helping you find professional emails tied to the brands you care about.
+          </p>
+        </div>
+
+        <div>
+          <div class="step-list">
+            <div>
+              <div class="step-title">Build a list of dream brands</div>
+              <p class="muted">
+                Start with the companies you actually want to work with, not just whoever shows up in your inbox.
+              </p>
+            </div>
+
+            <div>
+              <div class="step-title">Search their domains in NovaHunt</div>
+              <p class="muted">
+                Use NovaHunt to discover publicly available email addresses connected to each brand’s domain.
+              </p>
+            </div>
+
+            <div>
+              <div class="step-title">Organize contacts and start pitching</div>
+              <p class="muted">
+                Save the emails that matter to you, draft your pitches, and begin a consistent outreach rhythm —
+                one brand, one contact, one message at a time.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>      
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8 – FINAL CTA -->
+<section class="section-block section-final">
+  <div class="container">
+    <div class="section-inner">
+      <div class="badge-line" style="color:#ffcf89;">Ready when your next idea is</div>
+      <h2>Your next collaboration starts with one search.</h2>
+
+      <p style="color:#d6defe; max-width:620px; margin: 0 auto 26px auto;">
+        Enter the brand’s domain. See the professional emails NovaHunt finds.  
+        Choose who to reach out to — and send your next pitch with more clarity than guesswork.
+      </p>
+
+      <a href="index.html" class="btn-primary">
+        <span>Open NovaHunt</span>
+        <span class="arrow">↗</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
