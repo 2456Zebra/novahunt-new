@@ -36,7 +36,41 @@ body {
   background: #f8f9ff;
 }
   
-/* Brand header */ .intro-brand { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 20px; color: #ffffff; letter-spacing: -0.5px; user-select: none; z-index: 9999; /* ← THIS is the missing piece */ }
+/* Brand header */
+.intro-brand {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 800;
+  font-size: 20px;
+  color: #ffffff; /* looks better on the dark hero */
+  letter-spacing: -0.5px;
+  user-select: none;
+  z-index: 9999;
+
+  opacity: 0;
+  animation: brandFade 1.4s ease-out forwards;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+@keyframes brandFade {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    text-shadow: 0 0 18px rgba(255, 255, 255, 0.45);
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.28);
+  }
+}
+
   
 section {
   padding: 80px 20px;
