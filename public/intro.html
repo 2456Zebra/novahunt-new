@@ -63,32 +63,28 @@ body {
              brandBreath 6s ease-in-out infinite 1.4s;
 }
 
-/* Hover shimmer */
-.intro-brand:hover {
-  position: relative;
-}
-
-.intro-brand::after {
-  content: "";
+/* Brand header */
+.intro-brand {
   position: absolute;
-  top: 0;
-  left: -120%;
-  width: 80%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: skewX(-20deg);
-  transition: 0.4s;
-  opacity: 0;
-}
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 800;
+  font-size: 20px;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  user-select: none;
+  z-index: 9999;
 
-.intro-brand:hover::after {
-  left: 120%;
-  opacity: 1;
+  /* Fade-in */
+  opacity: 0;
+  animation: brandFade 1.4s ease-out forwards,
+             brandBreath 6s ease-in-out infinite 1.4s;
+
+  /* Accent glow (pink → purple) */
+  text-shadow:
+    0 0 12px rgba(255, 138, 216, 0.45),
+    0 0 22px rgba(123, 92, 255, 0.35);
 }
 
 /* Fade-in animation */
@@ -131,7 +127,6 @@ body {
       0 0 18px rgba(123, 92, 255, 0.25);
   }
 }
-
 
   
 section {
