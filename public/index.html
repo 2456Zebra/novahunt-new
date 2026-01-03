@@ -249,15 +249,18 @@
       .hero-brand { font-size: 36px; }
       .hero-sub { font-size: 16px; }
 
-      #domainInput {
-        font-size: 16px !important;
-        padding-left: 48px !important;
-      }
+      @media (max-width: 640px) {
+  #domainInput {
+    font-size: 15px !important;
+    padding-left: 44px !important;
+    letter-spacing: 0 !important;
+  }
 
-      .input-icon {
-        left: 14px !important;
-        font-size: 18px !important;
-      }
+  .input-icon {
+    left: 12px !important;
+    font-size: 17px !important;
+  }
+}
 
       .cta { font-size: 15px; padding: 12px 22px; }
       .results-wrap { padding: 20px; }
