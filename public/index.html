@@ -333,6 +333,25 @@
   justify-content: space-between;
   align-items: center;
 }
+
+    /* FIX: Restore department header alignment */
+.dept-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important; /* spacing between name, count, arrow */
+  cursor: pointer;
+}
+
+/* Ensure the arrow sits right after the count */
+.dept-arrow {
+  margin-left: 4px !important;
+}
+
+/* Ensure the count isn't pushed to the middle */
+.dept-count {
+  margin-left: 6px !important;
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
