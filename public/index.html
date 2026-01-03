@@ -708,6 +708,7 @@ async function loadMore() {
   const emails = data.data?.emails || [];
 
   renderResults(emails, currentDomain);
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 
   const shown = document.querySelectorAll('.result-card').length;
   document.getElementById('statusMsg').textContent = `Showing ${shown} of ${totalResults} contacts`;
