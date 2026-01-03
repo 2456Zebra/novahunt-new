@@ -312,6 +312,24 @@
   padding: 8px 14px !important;
   font-size: 13px !important;
 }
+
+    /* FIX: Department accordion behavior */
+.dept-content {
+  display: none;
+  padding-left: 8px;
+}
+
+.dept-content.open {
+  display: block;
+}
+
+/* Optional: restore original arrow spacing */
+.dept-header {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
