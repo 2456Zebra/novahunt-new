@@ -639,8 +639,13 @@ function renderSingleResult(e, container, domain) {
 }
 function renderResults(emails, domain) {
   const container = document.getElementById('results');
-  container.innerHTML = '';
 
+  // Only clear results on the first load
+  if (offset === 0) {
+    container.innerHTML = '';
+  }
+
+  // Group new emails by department
   const groups = {};
   emails.forEach(e => {
     let dept = e.department || 'Department unknown';
@@ -657,36 +662,55 @@ function renderResults(emails, domain) {
     return indexA - indexB;
   });
 
-  let first = true;
+  // Helper: find existing department section
+  function getExistingDeptSection(dept) {
+    return Array.from(container.querySelectorAll('.dept-section'))
+      .find(sec => sec.querySelector('.dept-name')?.textContent === dept);
+  }
+
+  let first = offset === 0; // Only first load gets auto-open
 
   sortedDepts.forEach(dept => {
-    const deptDiv = document.createElement('div');
-    deptDiv.className = 'dept-section';
+    let deptSection = getExistingDeptSection(dept);
 
-    const header = document.createElement('div');
-    header.className = 'dept-header';
-    header.innerHTML = `
-      <span class="dept-name">${dept}</span>
-      <span class="dept-count">(${groups[dept].length})</span>
-      <span class="dept-arrow">${first ? '▲' : '▼'}</span>
-    `;
+    // If department does NOT exist yet → create it
+    if (!deptSection) {
+      deptSection = document.createElement('div');
+      deptSection.className = 'dept-section';
 
-    const content = document.createElement('div');
-    content.className = 'dept-content';
-    if (first) content.classList.add('open');
-    first = false;
+      const header = document.createElement('div');
+      header.className = 'dept-header';
+      header.innerHTML = `
+        <span class="dept-name">${dept}</span>
+        <span class="dept-count">(0)</span>
+        <span class="dept-arrow">${first ? '▲' : '▼'}</span>
+      `;
 
+      const content = document.createElement('div');
+      content.className = 'dept-content';
+      if (first) content.classList.add('open');
+
+      header.onclick = () => {
+        content.classList.toggle('open');
+        header.querySelector('.dept-arrow').textContent =
+          content.classList.contains('open') ? '▲' : '▼';
+      };
+
+      deptSection.appendChild(header);
+      deptSection.appendChild(content);
+      container.appendChild(deptSection);
+    }
+
+    // Append new results to this department
+    const content = deptSection.querySelector('.dept-content');
     groups[dept].forEach(e => renderSingleResult(e, content, domain));
 
-    header.onclick = () => {
-      content.classList.toggle('open');
-      const arrow = header.querySelector('.dept-arrow');
-      arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
-    };
+    // Update count
+    const countEl = deptSection.querySelector('.dept-count');
+    const currentCount = content.querySelectorAll('.result-card').length;
+    countEl.textContent = `(${currentCount})`;
 
-    deptDiv.appendChild(header);
-    deptDiv.appendChild(content);
-    container.appendChild(deptDiv);
+    first = false; // Only the very first department on first load opens
   });
 
   container.style.display = 'block';
