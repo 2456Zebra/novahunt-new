@@ -4,58 +4,59 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NovaHunt.ai</title>
-
 <!-- Inter font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
   :root {
     --purple-light: #a78bfa;
     --purple-medium: #7c3aed;
     --purple-dark: #4c1d95;
     --purple-glow: #c084fc;
-
     --text-main: #ffffff;
     --text-muted: #d1d5db;
   }
-
   * { box-sizing: border-box; }
-
   /* === GROK BACKGROUND === */
   body {
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text-main);
-    background: linear-gradient(to bottom right, #0f172a, var(--purple-dark) 40%, #0f172a);
+    background: linear-gradient(to bottom right, #0f172a, var(--purple-dark) 50%, #0f172a);
     overflow-x: hidden;
     position: relative;
   }
-
   /* === GROK ORBS === */
   .orb {
     position: absolute;
     pointer-events: none;
-    filter: blur(40px);
-    opacity: 0.6;
+    filter: blur(70px);
     z-index: 0;
   }
-
   .orb-1 {
-    top: -20%;
-    left: -10%;
-    width: 60%;
-    height: 80%;
-    background: radial-gradient(circle at 30% 30%, var(--purple-glow) 0%, var(--purple-medium) 30%, transparent 70%);
+    top: -40%;
+    left: -30%;
+    width: 90%;
+    height: 110%;
+    background: radial-gradient(circle at 30% 30%, var(--purple-glow) 0%, var(--purple-medium) 25%, transparent 65%);
+    opacity: 0.85;
   }
-
   .orb-2 {
-    bottom: -20%;
-    right: -10%;
-    width: 50%;
-    height: 70%;
-    background: radial-gradient(circle at 70% 70%, var(--purple-light) 0%, var(--purple-medium) 40%, transparent 70%);
+    bottom: -40%;
+    right: -30%;
+    width: 80%;
+    height: 100%;
+    background: radial-gradient(circle at 70% 70%, var(--purple-light) 0%, var(--purple-medium) 35%, transparent 70%);
+    opacity: 0.8;
   }
-
+  .orb-3 {
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 90%;
+    background: radial-gradient(circle at center, var(--purple-glow) 0%, var(--purple-medium) 30%, transparent 65%);
+    opacity: 0.7;
+  }
   /* BRAND */
   .intro-brand {
     position: absolute;
@@ -68,7 +69,6 @@
     letter-spacing: -0.03em;
     z-index: 999;
   }
-
   /* HERO */
   .hero {
     padding: 180px 20px 140px;
@@ -76,7 +76,6 @@
     position: relative;
     z-index: 10;
   }
-
   .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -90,14 +89,12 @@
     margin-bottom: 22px;
     backdrop-filter: blur(6px);
   }
-
   .hero-badge-dot {
     width: 8px;
     height: 8px;
     border-radius: 999px;
     background: var(--purple-light);
   }
-
   /* HEADLINE */
   h1 {
     font-weight: 700;
@@ -106,7 +103,6 @@
     letter-spacing: -0.04em;
     margin: 0 0 24px;
   }
-
   /* SUBHEADLINE */
   .subheadline {
     font-size: clamp(1.15rem, 1.1vw + 1rem, 1.5rem);
@@ -115,7 +111,6 @@
     color: var(--text-muted);
     line-height: 1.55;
   }
-
   /* BUTTONS */
   .btn-primary,
   .btn-ghost {
@@ -130,26 +125,21 @@
     cursor: pointer;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
-
   .btn-primary {
     background: linear-gradient(135deg, var(--purple-medium), var(--purple-light));
     color: #ffffff;
   }
-
   .btn-primary:hover {
     transform: translateY(-3px);
     box-shadow: 0 18px 40px rgba(90, 50, 214, 0.45);
   }
-
   .btn-ghost {
     border: 1px solid rgba(255,255,255,0.4);
     color: #ffffff;
   }
-
   .btn-ghost:hover {
     background: rgba(255,255,255,0.12);
   }
-
   .hero-buttons {
     display: flex;
     justify-content: center;
@@ -158,74 +148,32 @@
   }
 </style>
 </head>
-
 <body>
-
 <!-- GROK ORBS -->
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
 
 <!-- BRAND -->
-<div class="intro-brand">NovaHunt.ai</div>
-
-<!-- HERO -->
-<section class="hero">
-
-  <div class="hero-badge">
-    <span class="hero-badge-dot"></span>
-    <span>Built for content creators and sales teams</span>
-  </div>
-
-  <h1>Instant Verified Contacts<br>for Creators & Sales Teams</h1>
-
-  <p class="subheadline">
-    Stop guessing emails. Enter any company domain and get real decision-makers
-    with verified emails — instantly.
-  </p>
-
-  <div class="hero-buttons">
-    <a href="#" class="btn-primary">Enter NovaHunt →</a>
-    <a href="#" class="btn-ghost">Who it's for ↓</a>
-  </div>
-
-</section>
-
-</body>
-</html>
-
-  /* DEMO SECTION */
-  .section-demo {
-    background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
-    background-size: 200% 200%;
-    animation: slowGradient 28s ease infinite;
-  }
-  </style>
-</head>
-
-<body>
 <div class="intro-brand">NovaHunt.ai</div>
 
 <!-- HERO -->
 <section class="hero section-block" data-aos="fade-up">
   <div class="container hero-inner">
     <div class="hero-grid">
-
       <!-- HERO LEFT -->
       <div class="hero-left" data-aos="fade-up" data-aos-delay="100">
         <div class="hero-label">
           <span class="hero-badge-dot"></span>
           <span>Built for content creators and sales teams</span>
         </div>
-
         <h1 data-aos="fade-up" data-aos-delay="200">
           See the real people behind any company. Instantly.
         </h1>
-
         <p data-aos="fade-up" data-aos-delay="300">
           NovaHunt reveals verified professional contacts — real people with names, titles, and departments — so your outreach reaches
           decision‑makers instead of disappearing into generic inboxes.
         </p>
-
         <div class="hero-cta-row" data-aos="fade-up" data-aos-delay="400">
           <a href="https://novahunt.ai/index.html" class="btn-primary">
             <span>Enter NovaHunt</span>
@@ -237,41 +185,34 @@
           </a>
         </div>
       </div>
-
       <!-- HERO RIGHT -->
-      <div class="hero-right" data-aos="fade-up" data-aos-delay="300"> <!-- FIXED -->
+      <div class="hero-right" data-aos="fade-up" data-aos-delay="300">
         <div class="hero-right-card">
           <div class="hero-pill">
             <span class="hero-badge-dot"></span>
             <span>Example contacts for nike.com</span>
           </div>
-
           <p class="hero-email-label">Verified contacts (sample)</p>
-
           <p class="hero-email">
             <strong>Jordan Matthews</strong><br>
             <span style="opacity:0.75;">Senior Marketing Manager</span><br>
             jordan.matthews@nike.com
           </p>
-
           <p class="hero-email">
             <strong>Alicia Chen</strong><br>
             <span style="opacity:0.75;">Partnerships Lead</span><br>
             alicia.chen@nike.com
           </p>
-
           <p class="hero-email">
             <strong>Marcus Rivera</strong><br>
             <span style="opacity:0.75;">PR Coordinator</span><br>
             marcus.rivera@nike.com
           </p>
-
           <p class="hero-email-label" style="margin-top: 12px;">
             NovaHunt found <strong>14 more contacts</strong> for this domain →
           </p>
         </div>
       </div>
-
     </div>
   </div>
 </section>
