@@ -1,49 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NovaHunt.ai – For Creators and Sales Teams</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaHunt.ai</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+<!-- Inter font (Grok uses this) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
+<style>
   :root {
-    --purple-darkest: #0b0924;
-    --purple-deep: #1a1440;
-    --purple-main: #3a2a7a;
-    --purple-bright: #5a32d6;
-    --purple-light: #8c6aff;
-    --purple-soft: #d8ccff;
+    --purple-light: #a78bfa;
+    --purple-medium: #7c3aed;
+    --purple-dark: #4c1d95;
+    --purple-glow: #c084fc;
 
     --text-main: #ffffff;
-    --text-muted: #cfc9ff;
-
-    --radius-xl: 32px;
-    --shadow-soft: 0 18px 45px rgba(10, 14, 40, 0.45);
+    --text-muted: #d1d5db;
   }
 
   * { box-sizing: border-box; }
 
+  /* === GROK BACKGROUND === */
   body {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-      "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     line-height: 1.6;
     color: var(--text-main);
-    background: var(--purple-darkest);
+    background: linear-gradient(to bottom right, #0f172a, var(--purple-dark) 40%, #0f172a);
     overflow-x: hidden;
+    position: relative;
   }
 
-  /* GLOBAL ANIMATIONS */
-  [data-aos] {
-    transition-property: opacity, transform;
+  /* === GROK ORBS === */
+  .orb {
+    position: absolute;
+    pointer-events: none;
+    filter: blur(40px);
+    opacity: 0.6;
+    z-index: 0;
   }
 
-  @keyframes slowGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  .orb-1 {
+    top: -20%;
+    left: -10%;
+    width: 60%;
+    height: 80%;
+    background: radial-gradient(circle at 30% 30%, var(--purple-glow) 0%, var(--purple-medium) 30%, transparent 70%);
+  }
+
+  .orb-2 {
+    bottom: -20%;
+    right: -10%;
+    width: 50%;
+    height: 70%;
+    background: radial-gradient(circle at 70% 70%, var(--purple-light) 0%, var(--purple-medium) 40%, transparent 70%);
   }
 
   /* BRAND */
@@ -52,28 +63,62 @@
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    font-weight: 800;
-    font-size: 20px;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-    opacity: 1;          /* FIXED: stays visible */
-    z-index: 99999;
-  }
-
-  section { padding: 80px 20px; }
-  .container { max-width: 1080px; margin: 0 auto; }
-
-  h1, h2 {
-    margin: 0 0 20px 0;
     font-weight: 700;
+    font-size: 22px;
+    color: #ffffff;
     letter-spacing: -0.03em;
+    z-index: 999;
   }
 
-  h1 { font-size: clamp(2.4rem, 3.2vw + 1.6rem, 3.6rem); color: #fff; }
-  h2 { font-size: clamp(2rem, 2.4vw + 1.4rem, 2.7rem); }
+  /* HERO */
+  .hero {
+    padding: 180px 20px 140px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
 
-  p { margin: 0 0 18px 0; font-size: 1.05rem; }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.22);
+    font-size: 0.82rem;
+    color: #e5e7eb;
+    margin-bottom: 22px;
+    backdrop-filter: blur(6px);
+  }
 
+  .hero-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--purple-light);
+  }
+
+  /* HEADLINE (Grok match) */
+  h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: clamp(3rem, 4.5vw + 1rem, 4.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin: 0 0 24px;
+  }
+
+  /* SUBHEADLINE */
+  .subheadline {
+    font-size: clamp(1.15rem, 1.1vw + 1rem, 1.5rem);
+    max-width: 720px;
+    margin: 0 auto 36px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  /* BUTTONS (your originals) */
   .btn-primary,
   .btn-secondary {
     display: inline-flex;
@@ -95,15 +140,9 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, var(--purple-bright), var(--purple-light));
+    background: linear-gradient(135deg, var(--purple-medium), var(--purple-light));
     color: #ffffff;
     border: none;
-  }
-
-  .btn-secondary {
-    border: 1px solid var(--purple-bright);
-    background: var(--purple-soft);
-    color: var(--purple-deep);
   }
 
   .btn-ghost {
@@ -123,103 +162,48 @@
     background: rgba(255,255,255,0.12);
   }
 
-  .badge-line {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--purple-light);
-    margin-bottom: 16px;
-  }
-
-  .columns-2 {
+  .hero-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 28px;
-  }
-
-  .section-block { position: relative; overflow: hidden; }
-  .section-inner { border-radius: var(--radius-xl); padding: 56px 26px; }
-
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, var(--purple-main), var(--purple-darkest));
-    background-size: 200% 200%;
-    animation: slowGradient 22s ease infinite;
-    color: #ffffff;
-  }
-
-  .hero-inner { display: flex; flex-direction: column; gap: 40px; }
-  .hero-grid { display: flex; flex-direction: column; gap: 40px; }
-
-  .hero-left, .hero-right { flex: 1; }
-
-  .hero-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
-    font-size: 0.8rem;
-    color: #eae6ff;
-    margin-bottom: 18px;
-  }
-
-  .hero-badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--purple-light);
-  }
-
-  .hero p { color: #e8e4ff; }
-
-  .hero-cta-row {
-    display: flex;
+    justify-content: center;
+    gap: 14px;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 10px;
   }
+</style>
+</head>
 
-  .hero-right-card {
-    background: rgba(255,255,255,0.06);
-    border-radius: var(--radius-xl);
-    padding: 28px;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-  }
+<body>
 
-  .hero-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    font-size: 0.78rem;
-    color: #eae6ff;
-    margin-bottom: 14px;
-  }
+<!-- GROK ORBS -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-  .hero-email-label {
-    font-size: 0.75rem;
-    color: #cfc9ff;
-    margin-bottom: 4px;
-  }
+<!-- BRAND -->
+<div class="intro-brand">NovaHunt.ai</div>
 
-  .hero-email {
-    font-size: 0.92rem;
-    color: #ffffff;
-    margin-bottom: 18px;
-    line-height: 1.55;
-  }
+<!-- HERO -->
+<section class="hero">
 
-  .hero-email + .hero-email {
-    border-top: 1px solid rgba(255,255,255,0.12);
-    padding-top: 14px;
-  }
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    <span>Built for content creators and sales teams</span>
+  </div>
+
+  <h1>Instant Verified Contacts<br>for Creators & Sales Teams</h1>
+
+  <p class="subheadline">
+    Stop guessing emails. Enter any company domain and get real decision-makers
+    with verified emails — instantly.
+  </p>
+
+  <div class="hero-buttons">
+    <a href="#" class="btn-primary">Enter NovaHunt →</a>
+    <a href="#" class="btn-ghost">Who it's for ↓</a>
+  </div>
+
+</section>
+
+</body>
+</html>
 
   /* DEMO SECTION */
   .section-demo {
