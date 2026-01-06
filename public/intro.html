@@ -5,34 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NovaHunt.ai</title>
 
-<!-- Inter font (Grok uses this) -->
+<!-- Grok font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root {
+    /* Grok color palette */
     --purple-light: #a78bfa;
     --purple-medium: #7c3aed;
     --purple-dark: #4c1d95;
     --purple-glow: #c084fc;
 
     --text-main: #ffffff;
-    --text-muted: #d1d5db;
+    --text-muted: #d1d5db; /* closer to Tailwind gray-300 */
   }
 
-  * { box-sizing: border-box; }
-
-  /* === GROK BACKGROUND === */
   body {
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;
-    line-height: 1.6;
-    color: var(--text-main);
     background: linear-gradient(to bottom right, #0f172a, var(--purple-dark) 40%, #0f172a);
+    color: var(--text-main);
     overflow-x: hidden;
     position: relative;
   }
 
-  /* === GROK ORBS === */
+  /* TOP BRAND */
+  .intro-brand {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 22px;
+    color: #fff;
+    z-index: 50;
+    letter-spacing: -0.03em;
+  }
+
+  /* ORB GLOWS (Grok-style) */
   .orb {
     position: absolute;
     pointer-events: none;
@@ -57,20 +67,7 @@
     background: radial-gradient(circle at 70% 70%, var(--purple-light) 0%, var(--purple-medium) 40%, transparent 70%);
   }
 
-  /* BRAND */
-  .intro-brand {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-weight: 700;
-    font-size: 22px;
-    color: #ffffff;
-    letter-spacing: -0.03em;
-    z-index: 999;
-  }
-
-  /* HERO */
+  /* HERO SECTION */
   .hero {
     padding: 180px 20px 140px;
     text-align: center;
@@ -78,6 +75,7 @@
     z-index: 10;
   }
 
+  /* BADGE */
   .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -99,26 +97,28 @@
     background: var(--purple-light);
   }
 
-  /* HEADLINE (Grok match) */
+  /* HEADLINE – tuned to match Grok more closely */
   h1 {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: clamp(3rem, 4.5vw + 1rem, 4.75rem);
-    line-height: 1.05;
-    letter-spacing: -0.04em;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700; /* Grok uses font-bold (700) */
+    font-size: clamp(3rem, 4.5vw + 1rem, 4.75rem); /* ~text-5xl..7xl range */
+    line-height: 1.05; /* leading-tight */
+    letter-spacing: -0.04em; /* a bit tighter */
     margin: 0 0 24px;
   }
 
-  /* SUBHEADLINE */
+  /* SUBHEADLINE – closer to Grok's text-gray-300, text-xl/2xl */
   .subheadline {
-    font-size: clamp(1.15rem, 1.1vw + 1rem, 1.5rem);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: clamp(1.15rem, 1.1vw + 1rem, 1.5rem); /* ~text-xl..2xl */
     max-width: 720px;
     margin: 0 auto 36px;
     color: var(--text-muted);
     line-height: 1.55;
   }
 
-  /* BUTTONS (your originals) */
+  /* YOUR ORIGINAL BUTTONS — UNCHANGED */
   .btn-primary,
   .btn-secondary {
     display: inline-flex;
@@ -173,14 +173,12 @@
 
 <body>
 
+<div class="intro-brand">NovaHunt.ai</div>
+
 <!-- GROK ORBS -->
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 
-<!-- BRAND -->
-<div class="intro-brand">NovaHunt.ai</div>
-
-<!-- HERO -->
 <section class="hero">
 
   <div class="hero-badge">
